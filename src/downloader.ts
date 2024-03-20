@@ -6,15 +6,15 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 
 class DownloadOptions {
 
-    headers: object = {};
-    proxy: string = "";
+    //headers: object = {};
+    proxy?: string;
 
     concurrency: number = 1;
-    timeoutMs: number = 10*1000;
-    totalRetry: number = 10;
+    //timeoutMs: number = 10*1000;
+    //totalRetry: number = 10;
 
     //preferredResolution: number = -1;
-    loggerCallback: object = {};
+    //loggerCallback: object = {};
 
 }
 

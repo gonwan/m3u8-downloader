@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import fs from 'node:fs';
 import path from "node:path";
 import { Parser } from 'm3u8-parser'
@@ -23,7 +24,7 @@ async function test2() {
     };
     let downloadManager = new DownloadManager(downloadOptions);
     for (let i = 0; i < 2; i++) {
-        let m3u8Buff = null;
+        let m3u8Buff: Buffer;
         if (inputUrl.startsWith('file://')) {
             m3u8Buff = await fs.promises.readFile(inputUrl);
         } else {
@@ -77,9 +78,9 @@ async function test2() {
                 let part = (parser.manifest.discontinuityStarts && parser.manifest.discontinuityStarts.length > 0) ? -1 : 0;
                 let pt = (part==0) ? 'part' + (part+'').padStart(2, '0') : '';
                 let pts = (part==0) ? [pt] : [];
-                let dlUrls = [];
-                let ptPaths = [];
-                let indexes = [];
+                let dlUrls: string[] = [];
+                let ptPaths: string[] = [];
+                let indexes: number[] = [];
                 for (let i = 0; i < parser.manifest.segments.length; i++) {
                     let sg = parser.manifest.segments[i];
                     if (sg.discontinuity) {
