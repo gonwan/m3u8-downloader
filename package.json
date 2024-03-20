@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "testm3u8": "npx tsx src/main.ts"
+    "testm3u8": "npx tsx src/run.ts",
+    "start": "electron .",
+    "pack-windows": "electron-builder --windows --publish always",
+    "pack-linux": "electron-builder --linux --publish always",
+    "pack-macos": "electron-builder --macos --publish always",
+    "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
     "got": "^13.0.0",
@@ -16,11 +21,18 @@
     "m3u8-parser": "^7.1.0",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "fluent-ffmpeg": "^2.1.2",
-    "@types/fluent-ffmpeg": "^2.1.24"
+    "@types/fluent-ffmpeg": "^2.1.24",
+    "vue": "^3.4.20",
+    "element-plus": "^2.6.1",
+    "@element-plus/icons-vue": "^2.3.1"
   },
   "devDependencies": {
     "typescript": "^5.2.2",
     "tsx": "^4.7.1",
-    "vite": "^5.1.6"
+    "vite": "^5.2.0",
+    "vue-tsc": "^2.0.6",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "electron": "^27.3.6",
+    "electron-builder": "^24.12.0"
   }
 }
