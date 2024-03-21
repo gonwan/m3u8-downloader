@@ -1,41 +1,54 @@
 <script setup lang="ts">
-
-const greet = async () => {
-  const files = await window.$electron.listFiles('D:\\');
-  alert(files);
-}
+import { Menu as IconMenu, Message, Setting } from '@element-plus/icons-vue';
 </script>
 
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <div class="mb-4">
-    <el-button @click="greet">Default</el-button>
-    <el-button type="primary">Primary</el-button>
-    <el-button type="success">Success</el-button>
-    <el-button type="info">Info</el-button>
-    <el-button type="warning">Warning</el-button>
-    <el-button type="danger">Danger</el-button>
-  </div>
+  <el-container class="layout-container-demo" style="height: 100%; width: 100%">
+    <el-aside width="auto">
+      <el-menu mode="vertical" default-active="/home" collapse router>
+        <el-menu-item index="/home">
+          <el-icon><message /></el-icon>
+          <template #title>Home</template>
+        </el-menu-item>
+        <el-menu-item index="/bilibili">
+          <el-icon><icon-menu /></el-icon>
+          <template #title>Bilibili</template>
+        </el-menu-item>
+        <el-menu-item index="/settings">
+          <el-icon><setting /></el-icon>
+          <template #title>Settings</template>
+        </el-menu-item>
+      </el-menu>
+    </el-aside>
+    <el-container>
+      <el-main>
+        <RouterView />
+      </el-main>
+    </el-container>
+  </el-container>
 </template>
 
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.layout-container-demo .el-header {
+  position: relative;
+  background-color: var(--el-color-primary-light-7);
+  color: var(--el-text-color-primary);
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.layout-container-demo .el-aside {
+  color: var(--el-text-color-primary);
+  background: var(--el-color-primary-light-8);
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+.layout-container-demo .el-menu {
+  border-right: none;
+}
+.layout-container-demo .el-main {
+  padding: 0;
+}
+.layout-container-demo .toolbar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  right: 20px;
 }
 </style>

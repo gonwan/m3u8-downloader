@@ -27,7 +27,8 @@
     "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.4",
     "m3u8-parser": "^7.1.0",
-    "vue": "^3.4.20"
+    "vue": "^3.4.20",
+    "vue-router": "^4.3.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
