@@ -25,6 +25,9 @@ app.whenReady().then(() => {
     ipcMain.handle('listFiles', listFiles);
     win = new BrowserWindow({
         title: 'Main window',
+        width: 960,
+        height: 600,
+        resizable: false,
         webPreferences: {
             preload: path.join(__dirname, 'preload.mjs')
         }

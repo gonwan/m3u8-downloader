@@ -4,7 +4,7 @@ import BilibiliView from './view/BilibiliView.vue';
 import SettingsView from './view/SettingsView.vue';
 
 const routes = [
-    { path: '/home', component: HomeView },
+    { path: '/', component: HomeView },
     { path: '/bilibili', component: BilibiliView },
     { path: '/settings', component: SettingsView }
 ]

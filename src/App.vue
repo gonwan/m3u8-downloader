@@ -3,10 +3,10 @@ import { Menu as IconMenu, Message, Setting } from '@element-plus/icons-vue';
 </script>
 
 <template>
-  <el-container class="layout-container-demo" style="height: 100%; width: 100%">
+  <el-container class="layout-container-demo" style="height: 100vh; width: 100vw">
     <el-aside width="auto">
-      <el-menu mode="vertical" default-active="/home" collapse router>
-        <el-menu-item index="/home">
+      <el-menu mode="vertical" :default-active="$route.path" collapse router>
+        <el-menu-item index="/">
           <el-icon><message /></el-icon>
           <template #title>Home</template>
         </el-menu-item>
@@ -20,11 +20,9 @@ import { Menu as IconMenu, Message, Setting } from '@element-plus/icons-vue';
         </el-menu-item>
       </el-menu>
     </el-aside>
-    <el-container>
-      <el-main>
-        <RouterView />
-      </el-main>
-    </el-container>
+    <el-main>
+      <RouterView />
+    </el-main>
   </el-container>
 </template>
 
