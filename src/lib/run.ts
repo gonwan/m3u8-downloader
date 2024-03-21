@@ -1,8 +1,8 @@
 import { Buffer } from 'node:buffer';
 import fs from 'node:fs';
 import path from "node:path";
-import { Parser } from 'm3u8-parser'
-import { DownloadOptions, DownloadManager } from './downloader.ts'
+import { Parser } from 'm3u8-parser';
+import { DownloadOptions, DownloadManager } from './downloader.ts';
 import { binaryConcat, ffmpegConcat } from "./ffmpeg.ts";
 
 async function test2() {

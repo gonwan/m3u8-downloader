@@ -1,5 +1,5 @@
-import ff from '@ffmpeg-installer/ffmpeg'
-import ffmpeg from 'fluent-ffmpeg'
+import ff from '@ffmpeg-installer/ffmpeg';
+import ffmpeg from 'fluent-ffmpeg';
 
 ffmpeg.setFfmpegPath(ff.path)
 console.log("version: " + ff.version)

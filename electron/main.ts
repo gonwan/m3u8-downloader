@@ -1,7 +1,11 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
-import path from 'node:path';
 import fs from 'node:fs';
-import { fileURLToPath } from 'url';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// https://iamwebwiz.medium.com/how-to-fix-dirname-is-not-defined-in-es-module-scope-34d94a86694d
+const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
+const __dirname = path.dirname(__filename); // get the name of the directory
 
 async function listFiles(event, dirPath: string) {
     let files = (await fs.promises.readdir(dirPath, { withFileTypes: true }))
@@ -9,13 +13,8 @@ async function listFiles(event, dirPath: string) {
     return files;
 }
 
-// https://iamwebwiz.medium.com/how-to-fix-dirname-is-not-defined-in-es-module-scope-34d94a86694d
-const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
-const __dirname = path.dirname(__filename); // get the name of the directory
-
 app.whenReady().then(() => {
     ipcMain.handle('listFiles', listFiles)
-
     const win = new BrowserWindow({
         title: 'Main window',
         webPreferences: {

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import process from 'node:process';
-import ffi from '@ffmpeg-installer/ffmpeg'
-import ffmpeg from 'fluent-ffmpeg'
+import ffi from '@ffmpeg-installer/ffmpeg';
+import ffmpeg from 'fluent-ffmpeg';
 
 //ffmpeg.setFfmpegPath('C:\\Users\\gonwan\\Downloads\\N_m3u8DL-CLI_v3.0.2_with_ffmpeg_and_SimpleG\\ffmpeg.exe')
 ffmpeg.setFfmpegPath(ffi.path)

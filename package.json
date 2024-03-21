@@ -18,26 +18,26 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@types/fluent-ffmpeg": "^2.1.24",
+    "element-plus": "^2.6.1",
+    "fluent-ffmpeg": "^2.1.2",
     "got": "^13.0.0",
     "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.4",
     "m3u8-parser": "^7.1.0",
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "fluent-ffmpeg": "^2.1.2",
-    "@types/fluent-ffmpeg": "^2.1.24",
-    "vue": "^3.4.20",
-    "element-plus": "^2.6.1",
-    "@element-plus/icons-vue": "^2.3.1"
+    "vue": "^3.4.20"
   },
   "devDependencies": {
-    "typescript": "^5.2.2",
-    "tsx": "^4.7.1",
-    "vite": "^5.2.0",
-    "vue-tsc": "^2.0.6",
     "@vitejs/plugin-vue": "^5.0.4",
-    "electron": "^28.2.6",
+    "electron": "^28.2.8",
     "electron-builder": "^24.12.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0",
     "vite-plugin-electron": "^0.28.4",
-    "vite-plugin-electron-renderer": "^0.14.5"
+    "vite-plugin-electron-renderer": "^0.14.5",
+    "vue-tsc": "^2.0.6"
   }
 }
