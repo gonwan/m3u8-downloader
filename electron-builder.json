@@ -1,0 +1,46 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "com.gonwan.m3u8downloader",
+  "asar": false,
+  "productName": "m3u8downloader",
+  "directories": {
+    "output": "release/${version}"
+  },
+  "files": [
+    "dist",
+    "dist-electron"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "zip",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "artifactName": "${productName}-v${version}-${platform}-${arch}.${ext}"
+  },
+  "mac": {
+    "target": [
+      {
+        "target": "dmg",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "artifactName": "${productName}-v${version}-${platform}-${arch}.${ext}"
+  },
+  "linux": {
+    "target": [
+      {
+        "target": "tar.gz",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "artifactName": "${productName}-v${version}-${platform}-${arch}.${ext}"
+  }
+}

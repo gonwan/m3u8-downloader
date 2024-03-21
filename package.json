@@ -1,18 +1,20 @@
 {
-  "name": "m3u8-downloader",
+  "name": "m3u8downloader",
+  "description": "yet another m3u8 downloader built with vue3/vite, element-plus & electron.",
+  "author": "gonwan",
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "main": "main.mjs",
+  "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "testm3u8": "npx tsx src/run.ts",
     "start": "electron .",
-    "pack-windows": "electron-builder --windows --publish always",
-    "pack-linux": "electron-builder --linux --publish always",
-    "pack-macos": "electron-builder --macos --publish always",
+    "pack-win": "electron-builder --win",
+    "pack-mac": "electron-builder --mac",
+    "pack-linux": "electron-builder --linux",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
@@ -34,6 +36,8 @@
     "vue-tsc": "^2.0.6",
     "@vitejs/plugin-vue": "^5.0.4",
     "electron": "^28.2.6",
-    "electron-builder": "^24.12.0"
+    "electron-builder": "^24.12.0",
+    "vite-plugin-electron": "^0.28.4",
+    "vite-plugin-electron-renderer": "^0.14.5"
   }
 }

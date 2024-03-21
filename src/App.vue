@@ -1,5 +1,9 @@
 <script setup lang="ts">
 
+const greet = async () => {
+  const files = await window.$electron.listFiles('D:\\');
+  alert(files);
+}
 </script>
 
 <template>
@@ -12,7 +16,7 @@
     </a>
   </div>
   <div class="mb-4">
-    <el-button>Default</el-button>
+    <el-button @click="greet">Default</el-button>
     <el-button type="primary">Primary</el-button>
     <el-button type="success">Success</el-button>
     <el-button type="info">Info</el-button>
