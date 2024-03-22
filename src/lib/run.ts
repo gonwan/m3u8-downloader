@@ -5,7 +5,7 @@ import { Parser } from 'm3u8-parser';
 import { DownloadOptions, DownloadManager } from './downloader.ts';
 import { binaryConcat, ffmpegConcat } from "./ffmpeg.ts";
 
-async function test2() {
+async function test2(aurl: string, dldir: string) {
 
     let outputFile = "C:\\Users\\gonwan\\Downloads\\ttt.mp4";
     //normal
@@ -22,6 +22,14 @@ async function test2() {
         //proxy: 'http://127.0.0.1:10809',
         concurrency: 10,
     };
+
+    if (aurl) {
+        baseUrl = aurl;
+    }
+    if (dldir) {
+        outputFile = path.join(dldir, 'ttt.mp4');
+    }
+
     let downloadManager = new DownloadManager(downloadOptions);
     for (let i = 0; i < 2; i++) {
         let m3u8Buff: Buffer;
@@ -119,5 +127,7 @@ async function test2() {
     }
 
 }
+
+export { test2 };
 
 test2();

@@ -11,6 +11,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 contextBridge.exposeInMainWorld('$electron', {
-    showSaveDialog: () => ipcRenderer.invoke('showSaveDialog'),
+    selectDirectory: () => ipcRenderer.invoke('selectDirectory'),
+    downloadM3u8: (aurl: string, dldir: string) => ipcRenderer.invoke('downloadM3u8', aurl, dldir),
     listFiles: (dirPath: string) => ipcRenderer.invoke('listFiles', dirPath)
 })
