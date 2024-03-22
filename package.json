@@ -36,6 +36,7 @@
     "electron-builder": "^24.12.0",
     "tsx": "^4.7.1",
     "typescript": "^5.2.2",
+    "unplugin-icons": "^0.18.5",
     "vite": "^5.2.0",
     "vite-plugin-electron": "^0.28.4",
     "vite-plugin-electron-renderer": "^0.14.5",

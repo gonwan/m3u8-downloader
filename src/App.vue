@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { House, Monitor, Setting } from '@element-plus/icons-vue';
+import HomeIcon from '~icons/local/ri--home-smile-line';
+import BilibilIcon from '~icons/local/ri--bilibili-line';
+import SettingsIcon from '~icons/local/ri--settings-3-line';
 </script>
 
 <template>
@@ -7,17 +9,17 @@ import { House, Monitor, Setting } from '@element-plus/icons-vue';
     <el-aside width="auto" style="display: flex">
       <el-menu mode="vertical" :default-active="$route.path" collapse router style="display: flex; flex-direction: column">
         <el-menu-item index="/">
-          <el-icon><house /></el-icon>
+          <el-icon><home-icon /></el-icon>
           <template #title>Home</template>
         </el-menu-item>
         <el-menu-item index="/bilibili">
-          <el-icon><monitor /></el-icon>
+          <el-icon><bilibil-icon /></el-icon>
           <template #title>Bilibili</template>
         </el-menu-item>
         <!-- work likes a spacer in qt -->
         <div style="flex-grow: 1" />
         <el-menu-item index="/settings">
-          <el-icon><setting /></el-icon>
+          <el-icon><settings-icon /></el-icon>
           <template #title>Settings</template>
         </el-menu-item>
         <!-- additional space to workaround the unintended scroll bar issue -->
