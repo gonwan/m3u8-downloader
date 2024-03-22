@@ -1,23 +1,27 @@
 <script setup lang="ts">
-import { Menu as IconMenu, Message, Setting } from '@element-plus/icons-vue';
+import { House, Monitor, Setting } from '@element-plus/icons-vue';
 </script>
 
 <template>
   <el-container class="layout-container-demo" style="height: 100vh; width: 100vw">
-    <el-aside width="auto">
-      <el-menu mode="vertical" :default-active="$route.path" collapse router>
+    <el-aside width="auto" style="display: flex">
+      <el-menu mode="vertical" :default-active="$route.path" collapse router style="display: flex; flex-direction: column">
         <el-menu-item index="/">
-          <el-icon><message /></el-icon>
+          <el-icon><house /></el-icon>
           <template #title>Home</template>
         </el-menu-item>
         <el-menu-item index="/bilibili">
-          <el-icon><icon-menu /></el-icon>
+          <el-icon><monitor /></el-icon>
           <template #title>Bilibili</template>
         </el-menu-item>
+        <!-- work likes a spacer in qt -->
+        <div style="flex-grow: 1" />
         <el-menu-item index="/settings">
           <el-icon><setting /></el-icon>
           <template #title>Settings</template>
         </el-menu-item>
+        <!-- additional space to workaround the unintended scroll bar issue -->
+        <div style="height: 4px" />
       </el-menu>
     </el-aside>
     <el-main>

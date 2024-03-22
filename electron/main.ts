@@ -27,11 +27,12 @@ app.whenReady().then(() => {
         title: 'Main window',
         width: 960,
         height: 600,
-        resizable: false,
+        resizable: true,
         webPreferences: {
             preload: path.join(__dirname, 'preload.mjs')
         }
     })
+    //win.removeMenu();
     if (process.env.VITE_DEV_SERVER_URL) {
         win.loadURL(process.env.VITE_DEV_SERVER_URL);
     } else {
