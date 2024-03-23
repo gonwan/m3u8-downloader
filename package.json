@@ -15,7 +15,7 @@
     "pack-win": "electron-builder --win",
     "pack-mac": "electron-builder --mac",
     "pack-linux": "electron-builder --linux",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "patch-package && electron-builder install-app-deps"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
@@ -34,6 +34,7 @@
     "@vitejs/plugin-vue": "^5.0.4",
     "electron": "^28.2.8",
     "electron-builder": "^24.12.0",
+    "patch-package": "^8.0.0",
     "tsx": "^4.7.1",
     "typescript": "^5.2.2",
     "unplugin-icons": "^0.18.5",

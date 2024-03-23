@@ -129,5 +129,3 @@ async function test2(aurl: string, dldir: string) {
 }
 
 export { test2 };
-
-test2();

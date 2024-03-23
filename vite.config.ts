@@ -11,6 +11,15 @@ export default defineConfig({
     electron({
       main: {
         entry: 'electron/main.ts'
+        // vite: {
+        //   build: {
+        //     lib: {
+        //       entry: 'electron/main.ts',
+        //       formats: ['cjs'],
+        //       fileName: () => '[name].cjs'
+        //     }
+        //   }
+        // }
       },
       preload: {
         input: 'electron/preload.ts'

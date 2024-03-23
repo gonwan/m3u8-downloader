@@ -1,11 +1,39 @@
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import process from 'node:process';
-import ffi from '@ffmpeg-installer/ffmpeg';
 import ffmpeg from 'fluent-ffmpeg';
 
-//ffmpeg.setFfmpegPath('C:\\Users\\gonwan\\Downloads\\N_m3u8DL-CLI_v3.0.2_with_ffmpeg_and_SimpleG\\ffmpeg.exe')
-ffmpeg.setFfmpegPath(ffi.path)
-console.log("version: " + ffi.version)
+/* copied and modified from ffmpeg-installer */
+const ffmpegInit = () => {
+    let platform = os.platform() + '-' + os.arch();
+    let binary = os.platform() === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
+    let npmPath = path.join('node_modules', '@ffmpeg-installer', platform); /* dev environment */
+    let npm2Path = path.join('resources', 'app', 'node_modules', '@ffmpeg-installer', platform); /* app environment */
+    let npmBinary = path.join(npmPath, binary);
+    let npm2Binary = path.join(npm2Path, binary);
+    let npmPackage = path.join(npmPath, 'package.json');
+    let npm2Package = path.join(npm2Path, 'package.json');
+    let ffmpegPath, packageJson;
+    if (fs.existsSync(npmBinary)) {
+        ffmpegPath = npmBinary;
+        packageJson = JSON.parse(fs.readFileSync(npmPackage, 'utf-8'));//;require(npm3Package);
+    } else if (fs.existsSync(npm2Binary)) {
+        ffmpegPath = npm2Binary;
+        packageJson = JSON.parse(fs.readFileSync(npm2Package, 'utf-8'));//require(npm2Package);
+    } else {
+        throw 'Could not find ffmpeg executable, tried "' + npmBinary + '", "' + npm2Binary + '" and "' + npm2Binary + '"';
+    }
+    return {
+        path: ffmpegPath,
+        version: packageJson.ffmpeg || packageJson.version,
+        url: packageJson.homepage
+    }
+}
+
+let ff = ffmpegInit();
+ffmpeg.setFfmpegPath(ff.path);
+console.log('version: ' + ff.version + ', path: ' + ff.path);
 
 const binaryConcat = async (files: string[], outputFile: string, baseDir: string) => {
     console.log('files: ' + files + ', outputFile: ' + outputFile)

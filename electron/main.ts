@@ -2,12 +2,11 @@ import {app, BrowserWindow, dialog, ipcMain} from 'electron'
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-//import { test2 } from "../src/lib/run";
+import { test2 } from "../src/lib/run.ts";
 
 // https://iamwebwiz.medium.com/how-to-fix-dirname-is-not-defined-in-es-module-scope-34d94a86694d
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
-
 let win: BrowserWindow;
 
 const selectDirectory = async (event)=> {
@@ -17,7 +16,7 @@ const selectDirectory = async (event)=> {
 
 const downloadM3u8 = async (event, aurl: string, dldir: string)=> {
     console.log(`aurl=${aurl} dldir=${dldir}`);
-    //test2(aurl, dldir);
+    test2(aurl, dldir);
 }
 
 const listFiles = async (event, dirPath: string)=> {
