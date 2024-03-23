@@ -3,7 +3,13 @@ import fs from 'node:fs';
 import path from "node:path";
 import { Parser } from 'm3u8-parser';
 import { DownloadOptions, DownloadManager } from './downloader.ts';
-import { binaryConcat, ffmpegConcat } from "./ffmpeg.ts";
+import { binaryConcat, ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg.ts";
+
+type SegInfo = {
+    idx: number;
+    dlUrl: string;
+    ptPath: string;
+}
 
 async function test2(aurl: string, dldir: string) {
 
@@ -24,7 +30,7 @@ async function test2(aurl: string, dldir: string) {
     };
 
     if (aurl) {
-        baseUrl = aurl;
+        inputUrl = aurl;
     }
     if (dldir) {
         outputFile = path.join(dldir, 'ttt.mp4');
@@ -84,43 +90,54 @@ async function test2(aurl: string, dldir: string) {
             console.log(parser.manifest);
             if (parser.manifest.segments) {
                 let part = (parser.manifest.discontinuityStarts && parser.manifest.discontinuityStarts.length > 0) ? -1 : 0;
-                let pt = (part==0) ? 'part' + (part+'').padStart(2, '0') : '';
-                let pts = (part==0) ? [pt] : [];
-                let dlUrls: string[] = [];
-                let ptPaths: string[] = [];
-                let indexes: number[] = [];
+                let partMap = new Map<number, SegInfo[]>();
+                if (part == 0) {
+                    partMap.set(part, []);
+                }
                 for (let i = 0; i < parser.manifest.segments.length; i++) {
                     let sg = parser.manifest.segments[i];
                     if (sg.discontinuity) {
                         part++;
-                        pt = 'part' + (part+'').padStart(2, '0');
-                        pts.push(pt);
+                        partMap.set(part, []);
                     }
                     let dlUrl = sg.uri;
                     if (!sg.uri.startsWith('http') && !sg.uri.startsWith('https')) {
                         dlUrl = `${baseUrl}/${sg.uri}`.replace('\/\/', '\/');
                     }
                     console.log('downloading: ' + dlUrl);
-                    let ptPath = path.join(ofile, pt);
+                    let ptPath = path.join(ofile, `part${part}`);
                     if (!fs.existsSync(ptPath)) {
                         fs.mkdirSync(ptPath);
                     }
-                    dlUrls.push(dlUrl);
-                    ptPaths.push(ptPath);
-                    indexes.push(i);
+                    partMap.get(part)?.push({ idx: i, dlUrl: dlUrl, ptPath: ptPath });
+                }
+                let indexes: number[] = [];
+                let dlUrls: string[] = [];
+                let ptPaths: string[] = [];
+                for (let [k, v] of partMap) {
+                    for (let seg of v) {
+                        indexes.push(seg.idx);
+                        dlUrls.push(seg.dlUrl);
+                        ptPaths.push(seg.ptPath);
+                    }
                 }
                 await downloadManager.downloadSegments(dlUrls, ptPaths, indexes);
                 /* now merge parts */
-                for (let i = 0; i < pts.length; i++) {
-                    let ptPath = path.join(ofile, pts[i]);
-                    let tsFiles = fs.readdirSync(ptPath, { withFileTypes: true })
-                        .filter(item => item.isFile() && item.name.endsWith('.ts'))
-                        .map(item => item.name);
-                    console.log('concat: ' + ptPath);
-                    await ffmpegConcat(tsFiles, ptPath, ptPath, 'mpegts');
+                for (let [k, v] of partMap) {
+                    if (v && v.length > 0) {
+                        let ptPath = v[0].ptPath;
+                        let tsFiles = v.map(seg => `${seg.idx}.ts`);
+                        console.log('concat: ' + ptPath);
+                        await ffmpegConcat(tsFiles, ptPath, ptPath, 'mpegts');
+                    }
                 }
                 /* now merge all */
-                let partFiles = pts.map(item => item + '.ts');
+                let partFiles: string[] = [];
+                for (let [k, v] of partMap) {
+                    if (v && v.length > 0) {
+                        partFiles.push(`part${k}.ts`)
+                    }
+                }
                 await ffmpegConcat(partFiles, ofile, ofile, 'mp4');
             }
         }

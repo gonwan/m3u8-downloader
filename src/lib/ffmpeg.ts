@@ -8,8 +8,8 @@ import ffmpeg from 'fluent-ffmpeg';
 const ffmpegInit = () => {
     let platform = os.platform() + '-' + os.arch();
     let binary = os.platform() === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
-    let npmPath = path.join('node_modules', '@ffmpeg-installer', platform); /* dev environment */
-    let npm2Path = path.join('resources', 'app', 'node_modules', '@ffmpeg-installer', platform); /* app environment */
+    let npmPath = path.resolve('node_modules', '@ffmpeg-installer', platform); /* dev environment */
+    let npm2Path = path.resolve('resources', 'app', 'node_modules', '@ffmpeg-installer', platform); /* app environment */
     let npmBinary = path.join(npmPath, binary);
     let npm2Binary = path.join(npm2Path, binary);
     let npmPackage = path.join(npmPath, 'package.json');
@@ -31,17 +31,18 @@ const ffmpegInit = () => {
     }
 }
 
+//ffmpeg.setFfmpegPath('C:\\Users\\gonwan\\Downloads\\N_m3u8DL-CLI_v3.0.2_with_ffmpeg_and_SimpleG\\ffmpeg.exe')
 let ff = ffmpegInit();
 ffmpeg.setFfmpegPath(ff.path);
 console.log('version: ' + ff.version + ', path: ' + ff.path);
 
 const binaryConcat = async (files: string[], outputFile: string, baseDir: string) => {
-    console.log('files: ' + files + ', outputFile: ' + outputFile)
+    console.log('files: ' + files + ', outputFile: ' + outputFile + ', baseDir: ' + baseDir)
     let cwd = process.cwd();
     process.chdir(baseDir);
     let ofile;
     try {
-        ofile = await fs.promises.open(outputFile, 'w+');
+        ofile = await fs.promises.open(`${outputFile}.ts`, 'w+');
         for (let f of files) {
             await ofile.appendFile(await fs.promises.readFile(f));
         }
@@ -109,23 +110,33 @@ const ffmpegConcat = async (files: string[], outputFile: string, baseDir: string
     });
 }
 
-const ffmpegConcat2 = (file: string) => {
-    //let cwd = process.cwd();
-    let ff = ffmpeg({
-        logger: console,
-        cwd: ''
+const ffmpegConvertToMpegTs = async (file: string) => {
+    return new Promise((resolve, reject) => {
+        let ff = ffmpeg({
+            logger: console
+        });
+        ff
+            .input(file + '.ts')
+            .addOptions([
+                '-map 0',
+                '-c copy',
+                '-copy_unknown',
+                '-f mpegts',
+            ])
+            .output(file + '.mpeg.ts')
+            .on('start', (cmdline) => {
+                console.log(cmdline);
+            })
+            .on('end', () => {
+                console.log('merging finished!');
+                resolve(null);
+            })
+            .on('error', (err) => {
+                console.log('error: ' + err);
+                reject();
+            })
+            .run();
     });
-    ff
-        .input(file)
-        .addOptions([
-            '-map 0',
-            '-c copy',
-            '-copy_unknown',
-            '-f mpegts',
-        ])
-        .on('start', (cmdline) => console.log(cmdline))
-        .output(file + '.mpeg')
-        .run();
 }
 
-export { binaryConcat, ffmpegConcat };
+export { binaryConcat, ffmpegConcat, ffmpegConvertToMpegTs };
