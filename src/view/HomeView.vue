@@ -34,7 +34,7 @@ const onSubmit = () => {
 <template>
   <h3>Home</h3>
   <el-scrollbar>
-    <el-form :model="form" label-width="auto" style="max-width: 800px">
+    <el-form :model="form" label-width="auto" max-w-800>
       <el-row>
         <el-col :span="24">
           <el-form-item label="Download from" required>
@@ -107,7 +107,7 @@ const onSubmit = () => {
         </el-col>
       </el-row>
     </el-form>
-<!--  <div class="mb-4">-->
+<!--  <div>-->
 <!--      <el-button @click="greet">Default</el-button>-->
 <!--      <el-button type="primary" @click="showSaveDialog">Primary</el-button>-->
 <!--      <el-button type="success">Success</el-button>-->
@@ -120,15 +120,5 @@ const onSubmit = () => {
 </template>
 
 <style scoped>
-.scrollbar-demo-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 50px;
-  margin: 10px;
-  text-align: center;
-  border-radius: 4px;
-  background: var(--el-color-primary-light-9);
-  color: var(--el-color-primary);
-}
+
 </style>

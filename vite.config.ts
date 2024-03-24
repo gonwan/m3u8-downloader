@@ -1,13 +1,13 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import unocss from 'unocss/vite'
 import electron from 'vite-plugin-electron/simple'
-import icons from 'unplugin-icons/vite'
-import { FileSystemIconLoader } from 'unplugin-icons/loaders'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
+    unocss(),
     electron({
       main: {
         entry: 'electron/main.ts'
@@ -25,12 +25,6 @@ export default defineConfig({
         input: 'electron/preload.ts'
       },
       renderer: { }
-    }),
-    icons({
-      compiler: 'vue3',
-      customCollections: {
-        'local': FileSystemIconLoader('./src/assets/icons')
-      }
     })
   ]
 })
