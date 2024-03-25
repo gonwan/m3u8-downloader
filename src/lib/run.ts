@@ -1,26 +1,24 @@
 import { Buffer } from 'node:buffer';
 import fs from 'node:fs';
 import path from "node:path";
+import url from 'node:url';
 import { Parser } from 'm3u8-parser';
-import { DownloadOptions, DownloadManager } from './downloader';
+import { SegInfo, DownloadOptions, DownloadManager } from './downloader';
 import { binaryConcat, ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg";
-
-type SegInfo = {
-    idx: number;
-    dlUrl: string;
-    ptPath: string;
-}
 
 async function test2(aurl: string, dldir: string) {
 
     let outputFile = "C:\\Users\\gonwan\\Downloads\\ttt.mp4";
-    //normal
-    let baseUrl = "https://svipsvip.ffzy-online5.com/20240316/24963_edf36ed5";
-    let inputUrl = "https://svipsvip.ffzy-online5.com/20240316/24963_edf36ed5/index.m3u8";
+    //normal,feifei
+    //let baseUrl = "https://svipsvip.ffzy-online5.com/20240323/25193_10b4631c";
+    //let inputUrl = "https://svipsvip.ffzy-online5.com/20240323/25193_10b4631c/index.m3u8";
     //proxy
     //let baseUrl = "https://top.letvlist.com/202403/16/WCsDk21n5w3/video";
     //let inputUrl = "https://top.letvlist.com/202403/16/WCsDk21n5w3/video/index.m3u8";
-    //aes,iv
+    //aes,iv,niuniu
+    let baseUrl = "https://64.32.20.246/play/QeZBnDge";
+    let inputUrl = "https://64.32.20.246/play/QeZBnDge/index.m3u8";
+
     let expectedRes = 1080;
 
     let downloadOptions: DownloadOptions = {
@@ -43,8 +41,8 @@ async function test2(aurl: string, dldir: string) {
             m3u8Buff = await fs.promises.readFile(inputUrl);
         } else {
             let idx = inputUrl.lastIndexOf('/')
-            baseUrl = inputUrl.slice(0, idx+1);
-            m3u8Buff = await downloadManager.downloadM3u8File(inputUrl);
+            baseUrl = inputUrl.slice(0, idx);
+            m3u8Buff = await downloadManager.downloadFile(inputUrl);
         }
         let parser = new Parser();
         parser.push(m3u8Buff);
@@ -75,10 +73,7 @@ async function test2(aurl: string, dldir: string) {
             if (matchedUri == '') {
                 console.log('error no res...');
             } else {
-                inputUrl = matchedUri;
-                if (!matchedUri.startsWith('http') && !matchedUri.startsWith('https')) {
-                    inputUrl = `${baseUrl}/${matchedUri}`.replace('\/\/', '\/');
-                }
+                inputUrl = url.resolve(inputUrl, matchedUri);
                 console.log('selecting: ' + inputUrl);
             }
             await fs.promises.writeFile(path.join(ofile, 'master.m3u8'), m3u8Buff);
@@ -91,37 +86,41 @@ async function test2(aurl: string, dldir: string) {
             if (parser.manifest.segments) {
                 let part = (parser.manifest.discontinuityStarts && parser.manifest.discontinuityStarts.length > 0) ? -1 : 0;
                 let partMap = new Map<number, SegInfo[]>();
+                let keyMap = new Map<string, Buffer>();
                 if (part == 0) {
                     partMap.set(part, []);
                 }
                 for (let i = 0; i < parser.manifest.segments.length; i++) {
-                    let sg = parser.manifest.segments[i];
-                    if (sg.discontinuity) {
+                    let seg = parser.manifest.segments[i];
+                    if (seg.discontinuity) {
                         part++;
                         partMap.set(part, []);
                     }
-                    let dlUrl = sg.uri;
-                    if (!sg.uri.startsWith('http') && !sg.uri.startsWith('https')) {
-                        dlUrl = `${baseUrl}/${sg.uri}`.replace('\/\/', '\/');
-                    }
+                    let dlUrl = url.resolve(inputUrl, seg.uri);
                     console.log('downloading: ' + dlUrl);
                     let ptPath = path.join(ofile, `part${part}`);
                     if (!fs.existsSync(ptPath)) {
                         fs.mkdirSync(ptPath);
                     }
-                    partMap.get(part)?.push({ idx: i, dlUrl: dlUrl, ptPath: ptPath });
-                }
-                let indexes: number[] = [];
-                let dlUrls: string[] = [];
-                let ptPaths: string[] = [];
-                for (let [k, v] of partMap) {
-                    for (let seg of v) {
-                        indexes.push(seg.idx);
-                        dlUrls.push(seg.dlUrl);
-                        ptPaths.push(seg.ptPath);
+                    if (seg.key) {
+                        let keyUrl = url.resolve(inputUrl, seg.key.uri);
+                        let key = keyMap.get(keyUrl);
+                        if (!key) {
+                            key = await downloadManager.downloadFile(keyUrl);
+                            keyMap.set(keyUrl, key);
+                        }
+                        partMap.get(part)?.push({ idx: i, dlUrl: dlUrl, ptPath: ptPath, key: key, keyIV: seg.key.iv, keyMethod: seg.key.method });
+                    } else {
+                        partMap.get(part)?.push({ idx: i, dlUrl: dlUrl, ptPath: ptPath });
                     }
                 }
-                await downloadManager.downloadSegments(dlUrls, ptPaths, indexes);
+                let segs: SegInfo[] = [];
+                for (let [k, v] of partMap) {
+                    for (let seg of v) {
+                        segs.push(seg);
+                    }
+                }
+                await downloadManager.downloadSegments(segs);
                 /* now merge parts */
                 for (let [k, v] of partMap) {
                     if (v && v.length > 0) {

@@ -1,8 +1,18 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import got, { Progress } from 'got';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+
+type SegInfo = {
+    idx: number;
+    dlUrl: string;
+    ptPath: string;
+    key?: Buffer;
+    keyIV?: Uint32Array;
+    keyMethod?: string;
+}
 
 class DownloadOptions {
 
@@ -30,7 +40,7 @@ class DownloadManager {
         this.options = options;
     }
 
-    async downloadM3u8File(url: string) {
+    async downloadFile(url: string) {
         //console.log(this.options.headers);
         return got.get(url,
             {
@@ -44,8 +54,8 @@ class DownloadManager {
             .buffer();
     }
 
-    async downloadOneSegment(dlUrl: string, ptPath: string, index: number, progressCallback?: (idx: number, progress: Progress) => void) {
-        let buff = await got.get(dlUrl,
+    async downloadOneSegment(seg: SegInfo, progressCallback?: (idx: number, progress: Progress) => void) {
+        let buff = await got.get(seg.dlUrl,
             {
                 headers: { 'User-Agent': 'Lavf/58.24.101' },
                 //headers: JSON.parse(JSON.stringify(this.options.headers)) /* object to record */
@@ -57,19 +67,23 @@ class DownloadManager {
             .on('downloadProgress', progress => {
                 //console.log(`index: ${index}, progress: ${JSON.stringify(progress)}`);
                 if (progressCallback) {
-                    progressCallback(index, progress);
+                    progressCallback(seg.idx, progress);
                 }
             })
             .buffer();
-        let outputPath = path.join(ptPath, `${index}.ts`);
+        if (seg.key && seg.keyIV) {
+            let cipher = crypto.createDecipheriv('aes-128-cbc', seg.key, seg.keyIV);
+            buff = Buffer.concat([ cipher.update(buff), cipher.final()]);
+        }
+        let outputPath = path.join(seg.ptPath, `${seg.idx}.ts`);
         await fs.promises.writeFile(outputPath, buff);
     }
 
-    async downloadFirstSegment(dlUrl: string, ptPath: string) {
-        await this.downloadOneSegment(dlUrl, ptPath, 0);
-    }
+    // async downloadFirstSegment(dlUrl: string, ptPath: string) {
+    //     await this.downloadOneSegment(dlUrl, ptPath, 0);
+    // }
 
-    async downloadSegments(dlUrls: string[], ptPaths: string[], indexes: number[]) {
+    async downloadSegments(segs: SegInfo[]) {
         let finishedSegs = 0;
         let totalTransferredBytes = 0;
         let requests = new Map<number, any>();
@@ -83,15 +97,15 @@ class DownloadManager {
             transferredBytes.forEach((v) => {
                 totalTransferredBytes += v;
             })
-            console.log(`download speed: ${(totalTransferredBytes-prev)/1000.0}kb/s, percent: ${finishedSegs/dlUrls.length*100}%.`);
+            console.log(`download speed: ${(totalTransferredBytes-prev)/1000.0}kb/s, percent: ${finishedSegs/segs.length*100}%.`);
             }, 1000);
-        for (let i = 0; i < dlUrls.length; i++) {
+        for (let i = 0; i < segs.length; i++) {
             if (requests.size <= this.options.concurrency) {
-                let p = this.downloadOneSegment(dlUrls[i], ptPaths[i], indexes[i], pcb).then(() => {
-                    requests.delete(indexes[i]);
+                let p = this.downloadOneSegment(segs[i], pcb).then(() => {
+                    requests.delete(segs[i].idx);
                     finishedSegs++;
                 })
-                requests.set(indexes[i], p);
+                requests.set(segs[i].idx, p);
                 //console.log('keys: ' + Array.from(requests.keys()));
                 if (requests.size == this.options.concurrency) {
                     await Promise.any(requests.values());
@@ -104,7 +118,7 @@ class DownloadManager {
 
 }
 
-export { DownloadOptions, DownloadManager };
+export { SegInfo, DownloadOptions, DownloadManager };
 
 // master.m3u8 --> playlists.json(no use..already selected), raw.m3u8 --> meta.json...
 // catch awaits...
