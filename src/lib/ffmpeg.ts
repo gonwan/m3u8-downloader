@@ -3,9 +3,16 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import ffmpeg from 'fluent-ffmpeg';
+import log from 'electron-log/main';
+
+type ffmpegInfo = {
+    path: string;
+    version: string;
+    url: string;
+};
 
 /* copied and modified from ffmpeg-installer */
-const ffmpegInit = () => {
+const ffmpegInit = () : ffmpegInfo => {
     let platform = os.platform() + '-' + os.arch();
     let binary = os.platform() === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
     let npmPath = path.resolve('node_modules', '@ffmpeg-installer', platform); /* dev environment */
@@ -17,29 +24,37 @@ const ffmpegInit = () => {
     let ffmpegPath, packageJson;
     if (fs.existsSync(npmBinary)) {
         ffmpegPath = npmBinary;
-        packageJson = JSON.parse(fs.readFileSync(npmPackage, 'utf-8'));//;require(npm3Package);
+        packageJson = JSON.parse(fs.readFileSync(npmPackage, 'utf-8'));
     } else if (fs.existsSync(npm2Binary)) {
         ffmpegPath = npm2Binary;
-        packageJson = JSON.parse(fs.readFileSync(npm2Package, 'utf-8'));//require(npm2Package);
+        packageJson = JSON.parse(fs.readFileSync(npm2Package, 'utf-8'));
     } else {
-        throw 'Could not find ffmpeg executable, tried "' + npmBinary + '", "' + npm2Binary + '" and "' + npm2Binary + '"';
+        throw new Error(`Could not find ffmpeg executable, tried \"${npmBinary}\" and \"${npm2Binary}\"`);
     }
-    return {
-        path: ffmpegPath,
-        version: packageJson.ffmpeg || packageJson.version,
-        url: packageJson.homepage
-    }
+    return { path: ffmpegPath, version: packageJson.ffmpeg || packageJson.version, url: packageJson.homepage };
 }
 
 //ffmpeg.setFfmpegPath('C:\\Users\\gonwan\\Downloads\\N_m3u8DL-CLI_v3.0.2_with_ffmpeg_and_SimpleG\\ffmpeg.exe')
-let ff = ffmpegInit();
-ffmpeg.setFfmpegPath(ff.path);
-console.log('version: ' + ff.version + ', path: ' + ff.path);
+try {
+    let ff = ffmpegInit();
+    ffmpeg.setFfmpegPath(ff.path);
+    log.info(`Using ffmpeg: ${ff.path}`);
+} catch (err) {
+    if (err instanceof Error) {
+        log.error(err.message);
+    }
+}
 
-const binaryConcat = async (files: string[], outputFile: string, baseDir: string) => {
-    console.log('files: ' + files + ', outputFile: ' + outputFile + ', baseDir: ' + baseDir)
+/**
+ * Concat segments of media files, without ffmpeg
+ * @param files files to concat
+ * @param outputFile output file without extension
+ * @param workingDir working directory
+ */
+const binaryConcat = async (files: string[], outputFile: string, workingDir: string) => {
     let cwd = process.cwd();
-    process.chdir(baseDir);
+    process.chdir(workingDir);
+    log.info(`Running binary concat: files=${files} outputFile=${outputFile}`);
     let ofile;
     try {
         ofile = await fs.promises.open(`${outputFile}.ts`, 'w+');
@@ -47,25 +62,31 @@ const binaryConcat = async (files: string[], outputFile: string, baseDir: string
             await ofile.appendFile(await fs.promises.readFile(f));
         }
     } catch (err) {
-        console.log('error: ' + err);
+        if (err instanceof Error) {
+            log.error(`Binary concat error: ${err.message}`);
+        }
     } finally {
         await ofile?.close();
         process.chdir(cwd);
     }
 }
 
-/*
- * see: https://trac.ffmpeg.org/wiki/Concatenate
- * see: https://www.ffmpeg.org/ffmpeg.html#Stream-selection
+/**
+ * Concat segments of media files.
+ * @see https://trac.ffmpeg.org/wiki/Concatenate
+ * @see https://www.ffmpeg.org/ffmpeg.html#Stream-selection
+ * @param files files to concat
+ * @param outputFile output file without extension
+ * @param workingDir working directory
+ * @param format output format
  */
-const ffmpegConcat = async (files: string[], outputFile: string, baseDir: string, format: string) => {
-    //console.log('files: ' + files + ', outputFile: ' + outputFile)
+const ffmpegConcat = async (files: string[], outputFile: string, workingDir: string, format: string) => {
     return new Promise((resolve, reject) => {
         let protocol = 'concat:' + files.join('|');
         let ff = ffmpeg(
             {
                 logger: console,
-                cwd: baseDir
+                cwd: workingDir
             })
             .input(protocol);
         switch (format) {
@@ -96,20 +117,24 @@ const ffmpegConcat = async (files: string[], outputFile: string, baseDir: string
         }
         ff
             .on('start', (cmdline) => {
-                console.log(cmdline);
+                log.verbose(`Running Ffmepg concat in ${format} format: ${cmdline}`);
             })
             .on('end', () => {
-                console.log('merging finished!');
+                log.info('Ffmpeg concat finished!');
                 resolve(null);
             })
             .on('error', (err) => {
-                console.log('error: ' + err);
+                log.error(`Ffmpeg concat error: ${err.message}`);
                 reject();
             })
             .run();
     });
 }
 
+/**
+ * Convert a file to mpegts format inline.
+ * @param file file to convert
+ */
 const ffmpegConvertToMpegTs = async (file: string) => {
     return new Promise((resolve, reject) => {
         let ff = ffmpeg({
@@ -125,14 +150,14 @@ const ffmpegConvertToMpegTs = async (file: string) => {
             ])
             .output(file + '.mpeg.ts')
             .on('start', (cmdline) => {
-                console.log(cmdline);
+                log.verbose(`Running conversion: ${cmdline}`);
             })
             .on('end', () => {
-                console.log('merging finished!');
+                log.info('Conversion finished!');
                 resolve(null);
             })
             .on('error', (err) => {
-                console.log('error: ' + err);
+                log.error(`Conversion error: ${err.message}`);
                 reject();
             })
             .run();
