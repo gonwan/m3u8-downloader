@@ -22,6 +22,8 @@ type DownloadOptions = {
     concurrency?: number;
     timeout?: number;
     retries?: number;
+    /* for debugging */
+    preserveFiles?: boolean;
 }
 
 type ProgressCallback = {

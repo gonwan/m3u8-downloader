@@ -2,8 +2,8 @@ import {app, BrowserWindow, dialog, ipcMain} from 'electron'
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { downloadM3u8 } from "../src/lib/run";
-import { DownloadOptions } from "../src/lib/downloader";
+import { downloadM3u8 } from "../src/lib/m3u8downloader";
+import { DownloadOptions } from "../src/lib/download";
 
 // https://iamwebwiz.medium.com/how-to-fix-dirname-is-not-defined-in-es-module-scope-34d94a86694d
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file

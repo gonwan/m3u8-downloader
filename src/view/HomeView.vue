@@ -8,7 +8,9 @@ const form = reactive({
   httpProxy: '',
   httpConcurrency: 3,
   httpTimeout: 10,
-  httpRetries: 3
+  httpRetries: 3,
+  /* for debugging */
+  preserveFiles: false,
 });
 
 const greet = async () => {
@@ -36,7 +38,8 @@ const onSubmit = () => {
     proxy: form.httpProxy,
     concurrency: form.httpConcurrency,
     timeout: form.httpTimeout * 1000,
-    retries: form.httpRetries
+    retries: form.httpRetries,
+    preserveFiles: form.preserveFiles
   });
 }
 
@@ -79,9 +82,16 @@ const onSubmit = () => {
         </el-col>
       </el-row>
       <el-row>
-        <el-col :span="24">
+        <el-col :span="12">
           <el-form-item label="Concurrency">
             <el-input type="number" max="10" v-model="form.httpConcurrency" placeholder="download concurrency, default 3" clearable />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="Preserve files">
+            <el-tooltip content="preserve files (debugging)" placement="top">
+              <el-checkbox v-model="form.preserveFiles" label="Yes" />
+            </el-tooltip>
           </el-form-item>
         </el-col>
       </el-row>

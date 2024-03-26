@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "testm3u8": "npx tsx src/lib/run.ts",
+    "testm3u8": "npx tsx src/lib/m3u8downloader.ts",
     "start": "electron .",
     "pack-win": "electron-builder --win",
     "pack-mac": "electron-builder --mac",

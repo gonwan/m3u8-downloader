@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import { DownloadOptions } from "../src/lib/download";
 
 window.addEventListener('DOMContentLoaded', () => {
     const replaceText = (selector, text) => {
@@ -12,6 +13,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 contextBridge.exposeInMainWorld('$electron', {
     selectFilePath: () => ipcRenderer.invoke('selectFilePath'),
-    downloadM3u8: (inputUrl: string, outputFile: string, downloadOptions: object) => ipcRenderer.invoke('downloadM3u8', inputUrl, outputFile, downloadOptions),
+    downloadM3u8: (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions) => ipcRenderer.invoke('downloadM3u8', inputUrl, outputFile, downloadOptions),
     listFiles: (dirPath: string) => ipcRenderer.invoke('listFiles', dirPath)
 });
