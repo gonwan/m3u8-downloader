@@ -11,5 +11,5 @@
     "allowSyntheticDefaultImports": true,
     "strict": true
   },
-  "include": ["vite.config.ts", "src/lib/*.ts"]
+  "include": ["vite.config.ts", "electron", "src/lib/*.ts"]
 }

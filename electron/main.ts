@@ -24,10 +24,14 @@ const createWindow = () => {
         title: 'Main window',
         width: 960,
         height: 600,
+        show: false,
         resizable: true,
         webPreferences: {
             preload: path.join(__dirname, 'preload.mjs')
         }
+    });
+    win.once('ready-to-show', () => {
+        win.show();
     });
     win.removeMenu();
     globalShortcut.register('Shift+CommandOrControl+I', () => {
@@ -44,14 +48,14 @@ app.whenReady().then(() => {
     ipcMain.handle('showSaveDialog', _showSaveDialog);
     ipcMain.handle('downloadM3u8', _downloadM3u8);
     createWindow();
-    app.on('activate', function () {
+    app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createWindow();
         }
     });
 });
 
-app.on('window-all-closed', function () {
+app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit();
     }
