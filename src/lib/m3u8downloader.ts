@@ -29,7 +29,7 @@ async function downloadM3u8(inputUrl: string, outputFile: string, downloadOption
     let dot = outputFile.lastIndexOf('.');
     let ofile = (dot == -1) ? outputFile : outputFile.slice(0, dot);
     if (!fs.existsSync(ofile)) {
-        fs.mkdirSync(ofile, { recursive: true });
+        await fs.promises.mkdir(ofile, { recursive: true });
     }
 
     let parser;
@@ -86,10 +86,10 @@ async function downloadM3u8(inputUrl: string, outputFile: string, downloadOption
                 partMap.set(part, []);
             }
             let dlUrl = url.resolve(inputUrl, seg.uri);
-            log.verbose(`Downloading seg${i}: ${dlUrl}`);
+            log.verbose(`Got seg${i}: ${dlUrl}`);
             let ptPath = path.join(ofile, `part${part}`);
             if (!fs.existsSync(ptPath)) {
-                fs.mkdirSync(ptPath);
+                await fs.promises.mkdir(ptPath);
             }
             if (seg.key) {
                 let keyUrl = url.resolve(inputUrl, seg.key.uri);
@@ -132,7 +132,7 @@ async function downloadM3u8(inputUrl: string, outputFile: string, downloadOption
     }
     /* clean up */
     if (!downloadOptions.preserveFiles) {
-        fs.rmSync(ofile, { force: true, recursive: true });
+        await fs.promises.rm(ofile, { force: true, recursive: true });
     }
 }
 
