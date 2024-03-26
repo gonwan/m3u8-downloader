@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 
 const form = reactive({
   m3u8Url: '',
@@ -13,19 +13,16 @@ const form = reactive({
   preserveFiles: false,
 });
 
-const greet = async () => {
-  let files = await window.$electron.listFiles('D:\\');
-  alert(files);
-}
+const downloadProgress = ref(100);
 
 const selectFilePath = async () => {
-  let obj = await window.$electron.selectFilePath();
+  let obj = await window.$electron.showSaveDialog('mp4');
   if (!obj.canceled) {
     form.downloadFilePath = obj.filePath;
   }
-}
+};
 
-const onSubmit = () => {
+const onGo = () => {
   let headerRecord = new Map();
   form.httpHeaders.split(/\n/).forEach((value) => {
     let kv = value.split(':');
@@ -41,7 +38,11 @@ const onSubmit = () => {
     retries: form.httpRetries,
     preserveFiles: form.preserveFiles
   });
-}
+};
+
+const onCancel = () => {
+
+};
 
 </script>
 
@@ -110,20 +111,18 @@ const onSubmit = () => {
       <el-row>
         <el-col :span="24">
           <el-form-item>
-            <el-button type="primary" @click="onSubmit">Go</el-button>
+            <el-button type="primary" ma mr-4 @click="onGo">Go</el-button>
+            <el-button type="primary" ma ml-4 @click="onCancel">Cancel</el-button>
           </el-form-item>
         </el-col>
       </el-row>
     </el-form>
-<!--  <div>-->
-<!--      <el-button @click="greet">Default</el-button>-->
-<!--      <el-button type="primary" @click="showSaveDialog">Primary</el-button>-->
-<!--      <el-button type="success">Success</el-button>-->
-<!--      <el-button type="info">Info</el-button>-->
-<!--      <el-button type="warning">Warning</el-button>-->
-<!--      <el-button type="danger">Danger</el-button>-->
-<!--      <p v-for="item in 50" :key="item" class="scrollbar-demo-item">{{ item }}</p>-->
-<!--  </div>-->
+    <el-row>
+      <el-col :span="24">
+        <el-text>Download speed: 100MB/s xxMB/oFMB</el-text>
+        <el-progress :text-inside="true" :stroke-width="20" :percentage="downloadProgress" />
+      </el-col>
+    </el-row>
   </el-scrollbar>
   </div>
 </template>

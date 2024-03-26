@@ -111,6 +111,7 @@ async function downloadM3u8(inputUrl: string, outputFile: string, downloadOption
                 segs.push(seg);
             }
         }
+        log.info(`Found ${segs.length} segments in ${part+1} parts`)
         await downloadManager.downloadSegments(segs);
         /* now merge parts */
         for (let [_, v] of partMap) {
