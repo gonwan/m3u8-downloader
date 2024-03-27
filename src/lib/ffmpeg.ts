@@ -2,8 +2,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
+import { createRequire } from 'node:module';
 import ffmpeg from 'fluent-ffmpeg';
 import log from 'electron-log/main';
+
+const require = createRequire(import.meta.url);
 
 type ffmpegInfo = {
     path: string;
@@ -36,12 +39,13 @@ const ffmpegInit = () : ffmpegInfo => {
 
 //ffmpeg.setFfmpegPath('C:\\Users\\gonwan\\Downloads\\N_m3u8DL-CLI_v3.0.2_with_ffmpeg_and_SimpleG\\ffmpeg.exe')
 try {
-    let ff = ffmpegInit();
-    ffmpeg.setFfmpegPath(ff.path);
-    log.info(`Using ffmpeg: ${ff.path}`);
+    //const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path.replace('app.asar', 'app.asar.unpacked');
+    const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked');
+    ffmpeg.setFfmpegPath(ffmpegPath);
+    log.info(`Using ffmpeg: ${ffmpegPath}`);
 } catch (err) {
     if (err instanceof Error) {
-        log.error(err.message);
+        log.error('Failed to find ffmpeg', err);
     }
 }
 

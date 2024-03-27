@@ -19,10 +19,10 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@types/fluent-ffmpeg": "^2.1.24",
     "electron-log": "^5.1.2",
     "element-plus": "^2.6.1",
+    "ffmpeg-static": "^5.2.0",
     "fluent-ffmpeg": "^2.1.2",
     "got": "^13.0.0",
     "http-proxy-agent": "^7.0.2",

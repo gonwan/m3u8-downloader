@@ -1,7 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   "appId": "com.gonwan.m3u8downloader",
-
   "productName": "m3u8downloader",
   "directories": {
     "output": "release/${version}"
@@ -9,7 +8,7 @@
   "asar": true,
   "asarUnpack": [
     "node_modules/fluent-ffmpeg",
-    "node_modules/@ffmpeg-installer/ffmpeg"
+    "node_modules/ffmpeg-static"
   ],
   "files": [
     "dist",
