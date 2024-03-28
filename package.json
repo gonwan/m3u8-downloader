@@ -8,7 +8,7 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "testm3u8": "npx tsx src/lib/m3u8downloader.ts",
     "start": "electron .",
@@ -39,8 +39,10 @@
     "patch-package": "^8.0.0",
     "tsx": "^4.7.1",
     "typescript": "^5.2.2",
-    "unocss": "^0.58.6",
-    "vite": "^5.2.0",
+    "unocss": "^0.58.8",
+    "unplugin-auto-import": "^0.17.5",
+    "unplugin-vue-components": "^0.26.0",
+    "vite": "^5.2.6",
     "vite-plugin-electron": "^0.28.4",
     "vue-tsc": "^2.0.6"
   }
