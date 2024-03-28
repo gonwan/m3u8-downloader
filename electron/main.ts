@@ -5,11 +5,18 @@ import { fileURLToPath } from 'node:url';
 import log from "electron-log/main";
 import { downloadM3u8 } from "../src/lib/m3u8downloader";
 import { DownloadOptions } from "../src/lib/download";
-
-globalThis.__filename = fileURLToPath(import.meta.url);
-globalThis.__dirname = path.dirname(__filename);
+import { ffmpegInit } from "../src/lib/ffmpeg";
 
 Object.assign(console, log.functions);
+
+/*
+ * Vite does not transform __filename/dirname in dependencies, only in config file(vite.config.ts).
+ * On the other hand, Webpack does this: https://github.com/webpack/webpack/issues/14072
+ * So do not use them in global call before they are assigned.
+ */
+globalThis.__filename = fileURLToPath(import.meta.url);
+globalThis.__dirname = path.dirname(__filename);
+ffmpegInit();
 
 /*
  * https://github.com/electron/electron/blob/c57ce31e84120efc74125fd084931092c9a4d228/lib/browser/init.ts#L21
