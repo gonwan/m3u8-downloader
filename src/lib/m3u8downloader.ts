@@ -57,7 +57,7 @@ async function downloadM3u8(inputUrl: string, outputFile: string, downloadOption
                 }
             }
             /* reconstruct input */
-            if (matchedUri == '') {
+            if (matchedUri === '') {
                 log.error('No playlist found');
                 break;
             } else {

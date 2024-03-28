@@ -48,11 +48,6 @@ const _showSaveDialog = async (event: Electron.IpcMainInvokeEvent, extension: st
             filters: [{ name: extension, extensions: [ extension ] }],
             properties: ['createDirectory', 'showOverwriteConfirmation']
         });
-    } else {
-        return dialog.showSaveDialog({
-            filters: [{ name: extension, extensions: [ extension ] }],
-            properties: ['createDirectory', 'showOverwriteConfirmation']
-        });
     }
 };
 
