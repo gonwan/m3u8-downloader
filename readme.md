@@ -9,9 +9,11 @@ Yet another m3u8 downloader built with vue3/vite, element-plus & electron.
 #### Notes
 - `NODE_ENV` is a node environment variable, see [here](https://nodejs.org/en/learn/getting-started/nodejs-the-difference-between-development-and-production).
 - Vite has a similar but different `mode` concept, see [here](https://vitejs.dev/guide/env-and-mode.html#node-env-and-modes).
+- In development environment:
+  - ESM are requested and loaded directly in browsers, see [here](https://vitejs.dev/guide/features).
+  - Vite dev server transform *.vue/*.css and other files to ESM(in memory) to be hosted, see [here](https://github.com/vitejs/vite/blob/main/packages/vite/src/node/server/middlewares/transform.ts).
+  - Vite server and client communicate via websocket, a websocket connection can be found in devtools.
 - In development environment, esbuild is used for:
   - pre-bundle dependencies to convert them to ESM.
   - transpile typescript to javascript, so that HMR can reflect in the browser.
-  - ESM are requested and loaded directly in browsers.
-  - see [here](https://vitejs.dev/guide/features).
 - In production environment, rollup is used for bundling for its flexibility. see [here](https://vitejs.dev/guide/why.html#why-not-bundle-with-esbuild).
