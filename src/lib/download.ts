@@ -121,6 +121,7 @@ class DownloadManager {
     }
 
     async downloadSegments(segs: SegInfo[], downloadProgress: DownloadProgress) {
+        downloadProgress.totalSegs = segs.length;
         let requests = new Map<number, any>();
         let transferredBytes = new Map<number, number>();
         const statCallback = (idx: number, progress: Progress) => {
@@ -153,13 +154,12 @@ class DownloadManager {
             }
         }
         if (downloadProgress.isStop) {
-            try {
-                abortController.abort();
-            } catch (e) {
-                log.info('hahah');
-            }
+            abortController.abort();
         }
-        await Promise.all(requests.values());
+        await Promise.all(requests.values())
+            .catch((err) => {
+                log.info('Download failed: ', err);
+            });
         /* sleep to get progress updated to 100% */
         await new Promise(r => setTimeout(r, 1000));
         clearInterval(statTimer);

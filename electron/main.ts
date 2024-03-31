@@ -9,6 +9,7 @@ import { DownloadOptions } from '../src/lib/download';
 
 log.transports.console.level = 'verbose';
 log.transports.file.level = 'verbose';
+log.initialize();
 Object.assign(console, log.functions);
 
 /*
@@ -80,10 +81,10 @@ const createWindow = () => {
         win.show();
     });
     win.removeMenu();
+    globalShortcut.register('Shift+CommandOrControl+I', () => {
+        win.webContents.openDevTools();
+    });
     if (process.env.VITE_DEV_SERVER_URL) { /* HMR support */
-        globalShortcut.register('Shift+CommandOrControl+I', () => {
-            win.webContents.openDevTools();
-        });
         win.loadURL(process.env.VITE_DEV_SERVER_URL);
     } else {
         win.loadFile('dist/index.html');

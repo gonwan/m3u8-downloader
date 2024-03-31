@@ -4,7 +4,7 @@ import log from 'electron-log/renderer';
 
 const form = reactive({
     m3u8Url: '',
-    downloadFilePath: '',
+    downloadFilePath: 'D:\\work\\aaa80.mp4',
     httpHeaders: 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
     httpProxy: '',
     httpConcurrency: 3,
@@ -56,30 +56,37 @@ const onGo = async () => {
         retries: form.httpRetries,
         preserveFiles: form.preserveFiles
     });
+    let isCancel = false;
     let pollingTimer = setInterval(async () => {
         let progress = await window.$electron.getDownloadProgress();
-        if (progress.totalSegs == 0) {
+        if (!progress.isStop && progress.totalSegs == 0) {
+            /* no progress to update */
+            return;
+        }
+        if (progress.isStop) {
+            clearInterval(pollingTimer);
+            downloadProgress.value = 0;
+            isCancel = true;
             return;
         }
         let percent = progress.transferredSegs / progress.totalSegs;
         let str = `Downloading ${progress.transferredSegs}/${progress.totalSegs} segs `
-            + `(${formatSize(progress.transferredBytes)}/${formatSize(progress.transferredBytes/percent)}) in ${formatSize(progress.speed)}/s`
+            + `(${formatSize(progress.transferredBytes)}/${formatSize(progress.transferredBytes/percent)} in ${formatSize(progress.speed)}/s)`;
         log.info(str);
         downloadProgress.value = Number((percent*100).toFixed(2));
         downloadSpeed.value = str;
         if (progress.totalSegs == progress.transferredSegs) {
             clearInterval(pollingTimer);
+            return;
         }
     }, 1000);
     await prom;
-    downloadSpeed.value = 'Download finished!';
+    downloadSpeed.value = isCancel ? 'Download canceled!' : 'Download finished!';
     isDownloading.value = false;
 }
 
 const onCancel = async () => {
     await window.$electron.stopDownloadM3u8();
-    downloadSpeed.value = 'Download stopped!';
-    isDownloading.value = false;
 }
 
 </script>

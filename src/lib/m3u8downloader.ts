@@ -8,14 +8,7 @@ import { Parser } from 'm3u8-parser';
 import { SegInfo, DownloadProgress, DownloadOptions, DownloadManager } from './download';
 import { binaryConcat, ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg";
 
-let downloadProcess: DownloadProgress = {
-    isStop: false,
-    totalSegs: 0,
-    transferredSegs: 0,
-    totalBytes: 0,
-    transferredBytes: 0,
-    speed: 0
-};
+let downloadProcess: DownloadProgress;
 
 /**
  * Download file from an m3u8 url
@@ -35,6 +28,14 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
     //let inputUrl = 'https://europe.olemovienews.com/hlstimeofffmp4/20210226/fICqcpqr/mp4/fICqcpqr.mp4/master.m3u8';
 
     log.info(`Downloading: inputUrl=${inputUrl} outputFile=${outputFile} options=${JSON.stringify(downloadOptions)}`);
+    downloadProcess = {
+        isStop: false,
+        totalSegs: 0,
+        transferredSegs: 0,
+        totalBytes: 0,
+        transferredBytes: 0,
+        speed: 0
+    };
 
     let dot = outputFile.lastIndexOf('.');
     let ofile = (dot == -1) ? outputFile : outputFile.slice(0, dot);
@@ -130,33 +131,27 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
                 segs.push(seg);
             }
         }
-        log.info(`Found ${segs.length} segments in ${part+1} parts`)
-        downloadProcess = {
-            isStop: false,
-            totalSegs: segs.length,
-            transferredSegs: 0,
-            totalBytes: 0,
-            transferredBytes: 0,
-            speed: 0
-        };
+        log.info(`Found ${segs.length} segments in ${part+1} parts`);
         await downloadManager.downloadSegments(segs, downloadProcess);
-        /* now merge parts */
-        for (let [_, v] of partMap) {
-            if (v && v.length > 0) {
-                let ptPath = v[0].ptPath;
-                let tsFiles = hasXMap ? [path.join('..', 'init.mp4')] : [];
-                v.forEach((seg) => tsFiles.push(`${seg.idx}.ts`));
-                await ffmpegConcat(tsFiles, ptPath, ptPath, 'mpegts');
+        if (!downloadProcess.isStop) {
+            /* now merge parts */
+            for (let [_, v] of partMap) {
+                if (v && v.length > 0) {
+                    let ptPath = v[0].ptPath;
+                    let tsFiles = hasXMap ? [path.join('..', 'init.mp4')] : [];
+                    v.forEach((seg) => tsFiles.push(`${seg.idx}.ts`));
+                    await ffmpegConcat(tsFiles, ptPath, ptPath, 'mpegts');
+                }
             }
-        }
-        /* now merge all */
-        let partFiles = [];
-        for (let [k, v] of partMap) {
-            if (v && v.length > 0) {
-                partFiles.push(`part${k}.ts`)
+            /* now merge all */
+            let partFiles = [];
+            for (let [k, v] of partMap) {
+                if (v && v.length > 0) {
+                    partFiles.push(`part${k}.ts`)
+                }
             }
+            await ffmpegConcat(partFiles, ofile, ofile, 'mp4');
         }
-        await ffmpegConcat(partFiles, ofile, ofile, 'mp4');
     }
     /* clean up */
     if (!downloadOptions.preserveFiles) {
