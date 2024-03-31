@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
+import { log } from 'electron-log/renderer';
 
 const form = reactive({
   m3u8Url: '',
@@ -13,14 +14,29 @@ const form = reactive({
   preserveFiles: false,
 });
 
-const downloadProgress = ref(100);
+const downloadSpeed = ref('');
+const downloadProgress = ref(0);
+
+const formatSize = (size: number) => {
+  if (size < 0) {
+    return 'ERROR';
+  } else if (size >= 1024 * 1024 * 1024) {
+    return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  } else if (size >= 1024 * 1024) {
+    return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+  } else if (size >= 1024) {
+    return `${(size / (1024)).toFixed(2)} KB`;
+  } else {
+    return `${size} B`;
+  }
+}
 
 const selectFilePath = async () => {
   let obj = await window.$electron.showSaveDialog('mp4');
   if (!obj.canceled) {
     form.downloadFilePath = obj.filePath;
   }
-};
+}
 
 const onGo = () => {
   let headerRecord = new Map();
@@ -38,11 +54,24 @@ const onGo = () => {
     retries: form.httpRetries,
     preserveFiles: form.preserveFiles
   });
-};
+  let pollingTimer = setInterval(async () => {
+    let progress = await window.$electron.getDownloadProgress();
+    let percent = progress.transferredSegs / progress.totalSegs;
+    let str = `Downloading (${progress.transferredSegs}/${progress.totalSegs}) segs `
+      + `(${formatSize(progress.transferredBytes)}/${formatSize(progress.transferredBytes/percent)}) in ${formatSize(progress.speed)}/s`
+    console.log(str);
+    downloadProgress.value = Number((percent*100).toFixed(2));
+    downloadSpeed.value = str;
+    if (progress.totalSegs == progress.transferredSegs) {
+      clearInterval(pollingTimer);
+    }
+  }, 1000);
+}
 
-const onCancel = () => {
-
-};
+const onCancel = async () => {
+  let downloadProgress = await window.$electron.getDownloadProgress();
+  downloadProgress.isStop = true;
+}
 
 </script>
 
@@ -119,7 +148,7 @@ const onCancel = () => {
     </el-form>
     <el-row>
       <el-col :span="24">
-        <el-text>Download speed: 100MB/s xxMB/oFMB</el-text>
+        <el-text>{{ downloadSpeed }}</el-text>
         <el-progress :text-inside="true" :stroke-width="20" :percentage="downloadProgress" />
       </el-col>
     </el-row>

@@ -5,11 +5,13 @@ import url from 'node:url';
 import log from 'electron-log/main';
 // @ts-ignore
 import { Parser } from 'm3u8-parser';
-import { SegInfo, DownloadOptions, DownloadManager } from './download';
+import { SegInfo, DownloadProgress, DownloadOptions, DownloadManager } from './download';
 import { binaryConcat, ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg";
 
 log.transports.console.level = 'info';
 log.transports.console.level = 'verbose';
+
+let downloadProcess: DownloadProgress;
 
 /**
  * Download file from an m3u8 url
@@ -17,7 +19,7 @@ log.transports.console.level = 'verbose';
  * @param outputFile
  * @param downloadOptions
  */
-async function downloadM3u8(inputUrl: string, outputFile: string, downloadOptions: DownloadOptions) {
+const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions) => {
 
     //normal,feifei
     //let inputUrl = "https://svipsvip.ffzy-online5.com/20240323/25193_10b4631c/index.m3u8";
@@ -91,7 +93,7 @@ async function downloadM3u8(inputUrl: string, outputFile: string, downloadOption
             if (!fs.existsSync(ptPath)) {
                 await fs.promises.mkdir(ptPath);
             }
-            if (seg.key) {
+            if (seg.key) { /* EXT-X-KEY */
                 let keyUrl = url.resolve(inputUrl, seg.key.uri);
                 let key = keyMap.get(keyUrl);
                 if (!key) {
@@ -104,6 +106,9 @@ async function downloadM3u8(inputUrl: string, outputFile: string, downloadOption
             } else {
                 partMap.get(part)?.push({ idx: i, dlUrl: dlUrl, ptPath: ptPath });
             }
+            if (seg.map) { /* EXT-MAP-KEY */
+                // FIXME
+            }
         }
         let segs: SegInfo[] = [];
         for (let [_, v] of partMap) {
@@ -112,7 +117,15 @@ async function downloadM3u8(inputUrl: string, outputFile: string, downloadOption
             }
         }
         log.info(`Found ${segs.length} segments in ${part+1} parts`)
-        await downloadManager.downloadSegments(segs);
+        downloadProcess = {
+            isStop: false,
+            totalSegs: segs.length,
+            transferredSegs: 0,
+            totalBytes: 0,
+            transferredBytes: 0,
+            speed: 0
+        };
+        await downloadManager.downloadSegments(segs, downloadProcess);
         /* now merge parts */
         for (let [_, v] of partMap) {
             if (v && v.length > 0) {
@@ -136,4 +149,8 @@ async function downloadM3u8(inputUrl: string, outputFile: string, downloadOption
     }
 }
 
-export { downloadM3u8 };
+const getDownloadProgress = () => {
+    return downloadProcess;
+}
+
+export { downloadM3u8, getDownloadProgress };

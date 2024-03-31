@@ -1,6 +1,4 @@
 import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 import process from 'node:process';
 import { createRequire } from 'node:module';
 import ffmpeg from 'fluent-ffmpeg';

@@ -3,7 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import log from "electron-log/main";
-import { downloadM3u8 } from "../src/lib/m3u8downloader";
+import {downloadM3u8, getDownloadProgress } from "../src/lib/m3u8downloader";
 import { DownloadOptions } from "../src/lib/download";
 import { ffmpegInit } from "../src/lib/ffmpeg";
 
@@ -49,11 +49,15 @@ const _showSaveDialog = async (event: Electron.IpcMainInvokeEvent, extension: st
             properties: ['createDirectory', 'showOverwriteConfirmation']
         });
     }
-};
+}
 
 const _downloadM3u8 = async (event: Electron.IpcMainInvokeEvent, inputUrl: string, outputFile: string, downloadOptions: DownloadOptions)=> {
     await downloadM3u8(inputUrl, outputFile, downloadOptions);
-};
+}
+
+const _getDownloadProgress = async (event: Electron.IpcMainInvokeEvent) => {
+    return getDownloadProgress();
+}
 
 const createWindow = () => {
     const win = new BrowserWindow({
@@ -89,6 +93,7 @@ app.whenReady().then(() => {
      */
     ipcMain.handle('showSaveDialog', _showSaveDialog);
     ipcMain.handle('downloadM3u8', _downloadM3u8);
+    ipcMain.handle('getDownloadProgress', _getDownloadProgress);
     createWindow();
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {

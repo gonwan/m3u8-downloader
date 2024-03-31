@@ -12,8 +12,17 @@ type SegInfo = {
     ptPath: string;
     key?: Buffer;
     keyIV?: Uint32Array;
-    keyMethod?: string;
-}
+    keyMethod?: string
+};
+
+type DownloadProgress = {
+    isStop: boolean;
+    totalSegs: number;
+    transferredSegs: number;
+    totalBytes: number;
+    transferredBytes: number;
+    speed: number /* per second */
+};
 
 type DownloadOptions = {
     /* electron ipc only supports map */
@@ -23,12 +32,10 @@ type DownloadOptions = {
     timeout?: number;
     retries?: number;
     /* for debugging */
-    preserveFiles?: boolean;
-}
+    preserveFiles?: boolean
+};
 
-type ProgressCallback = {
-    callback:  (idx: number, progress: Progress) => void;
-}
+type StatCallback = (idx: number, progress: Progress) => void;
 
 // see: https://datatracker.ietf.org/doc/html/rfc8216, HTTP Live Streaming
 class DownloadManager {
@@ -68,7 +75,7 @@ class DownloadManager {
             .buffer();
     }
 
-    async downloadOneSegment(seg: SegInfo, statCallback?: (idx: number, progress: Progress) => void) {
+    async downloadOneSegment(seg: SegInfo, statCallback?: StatCallback) {
         let buff = await got.get(seg.dlUrl,
             {
                 headers: this.options.headers ? this.mapToRecord(this.options.headers) : undefined,
@@ -98,7 +105,7 @@ class DownloadManager {
                     }
                     break;
                 case 'SAMPLE-AES':
-                    //FIXME
+                    // FIXME
                     break;
                 case 'NONE':
                 default:
@@ -109,42 +116,52 @@ class DownloadManager {
         await fs.promises.writeFile(outputPath, buff);
     }
 
-    async downloadSegments(segs: SegInfo[]) {
-        let finishedSegs = 0;
-        let totalTransferredBytes = 0;
+    async downloadSegments(segs: SegInfo[], downloadProgress: DownloadProgress) {
         let requests = new Map<number, any>();
         let transferredBytes = new Map<number, number>();
         const statCallback = (idx: number, progress: Progress) => {
             transferredBytes.set(idx, progress.transferred);
         }
         let statTimer = setInterval(() => {
-            let prev = totalTransferredBytes;
-            totalTransferredBytes = 0;
+            let prev = downloadProgress.transferredBytes;
+            let current = 0;
             transferredBytes.forEach((v) => {
-                totalTransferredBytes += v;
+                current += v;
             })
-            log.verbose(`Download speed: ${(totalTransferredBytes-prev)/1000.0}kb/s, percent: ${(finishedSegs/segs.length*100).toFixed(2)}%.`);
+            downloadProgress.transferredBytes = current;
+            downloadProgress.speed = current - prev;
             }, 1000);
         for (let i = 0; i < segs.length; i++) {
+            if (downloadProgress.isStop) {
+                break;
+            }
             // @ts-ignore
             if (requests.size <= this.options.concurrency) {
                 let p = this.downloadOneSegment(segs[i], statCallback).then(() => {
                     requests.delete(segs[i].idx);
-                    finishedSegs++;
-                })
+                    downloadProgress.transferredSegs++;
+                });
                 requests.set(segs[i].idx, p);
                 if (requests.size == this.options.concurrency) {
                     await Promise.any(requests.values());
                 }
             }
         }
-        await Promise.all(requests.values());
+        if (downloadProgress.isStop) {
+            for (let f of requests.values()) {
+                f.cancel();
+            }
+        } else {
+            await Promise.all(requests.values());
+        }
+        /* sleep to get progress updated to 100% */
+        await new Promise(r => setTimeout(r, 1000));
         clearInterval(statTimer);
     }
 
 }
 
-export { SegInfo, DownloadOptions, DownloadManager };
+export { SegInfo, DownloadProgress, DownloadOptions, DownloadManager };
 
 // master.m3u8 --> playlists.json(no use..already selected), raw.m3u8 --> meta.json...
 // catch awaits...
