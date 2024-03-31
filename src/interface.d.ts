@@ -1,9 +1,9 @@
 import { DownloadOptions, DownloadProgress } from "./lib/download";
-import {getDownloadProgress} from "./lib/m3u8downloader.ts";
 
 export interface IElectron {
     showSaveDialog: (extension: string) => Promise<Electron.SaveDialogReturnValue>,
     downloadM3u8: (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions) => Promise<void>,
+    stopDownloadM3u8: () => Promise<DownloadProgress>,
     getDownloadProgress: () => Promise<DownloadProgress>
 }
 

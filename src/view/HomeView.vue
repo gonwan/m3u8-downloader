@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
-import { log } from 'electron-log/renderer';
+import log from 'electron-log/renderer';
 
 const form = reactive({
     m3u8Url: '',
@@ -14,6 +14,7 @@ const form = reactive({
     preserveFiles: false
 });
 
+const isDownloading = ref(false);
 const downloadSpeed = ref('');
 const downloadProgress = ref(0);
 
@@ -38,7 +39,8 @@ const selectFilePath = async () => {
     }
 }
 
-const onGo = () => {
+const onGo = async () => {
+    isDownloading.value = true;
     let headerRecord = new Map();
     form.httpHeaders.split(/\n/).forEach((value) => {
         let kv = value.split(':');
@@ -46,7 +48,7 @@ const onGo = () => {
             headerRecord.set(kv[0].trim(), kv[1].trim());
         }
     });
-    let obj = window.$electron.downloadM3u8(form.m3u8Url, form.downloadFilePath, {
+    let prom = window.$electron.downloadM3u8(form.m3u8Url, form.downloadFilePath, {
         headers: headerRecord,
         proxy: form.httpProxy,
         concurrency: form.httpConcurrency,
@@ -56,24 +58,28 @@ const onGo = () => {
     });
     let pollingTimer = setInterval(async () => {
         let progress = await window.$electron.getDownloadProgress();
-        if (!progress) {
+        if (progress.totalSegs == 0) {
             return;
         }
         let percent = progress.transferredSegs / progress.totalSegs;
-        let str = `Downloading (${progress.transferredSegs}/${progress.totalSegs}) segs `
+        let str = `Downloading ${progress.transferredSegs}/${progress.totalSegs} segs `
             + `(${formatSize(progress.transferredBytes)}/${formatSize(progress.transferredBytes/percent)}) in ${formatSize(progress.speed)}/s`
-        console.log(str);
+        log.info(str);
         downloadProgress.value = Number((percent*100).toFixed(2));
         downloadSpeed.value = str;
         if (progress.totalSegs == progress.transferredSegs) {
             clearInterval(pollingTimer);
         }
     }, 1000);
+    await prom;
+    downloadSpeed.value = 'Download finished!';
+    isDownloading.value = false;
 }
 
 const onCancel = async () => {
-  let downloadProgress = await window.$electron.getDownloadProgress();
-  downloadProgress.isStop = true;
+    await window.$electron.stopDownloadM3u8();
+    downloadSpeed.value = 'Download stopped!';
+    isDownloading.value = false;
 }
 
 </script>
@@ -143,8 +149,8 @@ const onCancel = async () => {
       <el-row>
         <el-col :span="24">
           <el-form-item>
-            <el-button type="primary" ma mr-4 @click="onGo">Go</el-button>
-            <el-button type="primary" ma ml-4 @click="onCancel">Cancel</el-button>
+            <el-button type="primary" :disabled="isDownloading" ma mr-4 @click="onGo">Go</el-button>
+            <el-button type="primary" :disabled="!isDownloading" ma ml-4 @click="onCancel">Cancel</el-button>
           </el-form-item>
         </el-col>
       </el-row>

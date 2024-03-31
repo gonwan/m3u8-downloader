@@ -2,13 +2,13 @@ import { app, dialog, globalShortcut, ipcMain, BrowserWindow } from 'electron'
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import log from "electron-log/main";
-import {downloadM3u8, getDownloadProgress } from "../src/lib/m3u8downloader";
-import { DownloadOptions } from "../src/lib/download";
-import { ffmpegInit } from "../src/lib/ffmpeg";
+import log from 'electron-log/main';
+import { ffmpegInit } from '../src/lib/ffmpeg';
+import {downloadM3u8, getDownloadProgress, stopDownloadM3u8} from '../src/lib/m3u8downloader';
+import { DownloadOptions } from '../src/lib/download';
 
-log.transports.console.level = 'info';
 log.transports.console.level = 'verbose';
+log.transports.file.level = 'verbose';
 Object.assign(console, log.functions);
 
 /*
@@ -57,6 +57,10 @@ const _downloadM3u8 = async (event: Electron.IpcMainInvokeEvent, inputUrl: strin
     await downloadM3u8(inputUrl, outputFile, downloadOptions);
 }
 
+const _stopDownloadM3u8 = async (event: Electron.IpcMainInvokeEvent) => {
+    return stopDownloadM3u8();
+}
+
 const _getDownloadProgress = async (event: Electron.IpcMainInvokeEvent) => {
     return getDownloadProgress();
 }
@@ -95,6 +99,7 @@ app.whenReady().then(() => {
      */
     ipcMain.handle('showSaveDialog', _showSaveDialog);
     ipcMain.handle('downloadM3u8', _downloadM3u8);
+    ipcMain.handle('stopDownloadM3u8', _stopDownloadM3u8);
     ipcMain.handle('getDownloadProgress', _getDownloadProgress);
     createWindow();
     app.on('activate', () => {

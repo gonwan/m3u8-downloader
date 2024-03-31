@@ -8,7 +8,14 @@ import { Parser } from 'm3u8-parser';
 import { SegInfo, DownloadProgress, DownloadOptions, DownloadManager } from './download';
 import { binaryConcat, ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg";
 
-let downloadProcess: DownloadProgress;
+let downloadProcess: DownloadProgress = {
+    isStop: false,
+    totalSegs: 0,
+    transferredSegs: 0,
+    totalBytes: 0,
+    transferredBytes: 0,
+    speed: 0
+};
 
 /**
  * Download file from an m3u8 url
@@ -19,18 +26,21 @@ let downloadProcess: DownloadProgress;
 const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions) => {
 
     //normal,feifei
-    //let inputUrl = "https://svipsvip.ffzy-online5.com/20240323/25193_10b4631c/index.m3u8";
+    //let inputUrl = 'https://svipsvip.ffzy-online5.com/20240323/25193_10b4631c/index.m3u8';
     //proxy
-    //let inputUrl = "https://top.letvlist.com/202403/16/WCsDk21n5w3/video/index.m3u8";
+    //let inputUrl = 'https://top.letvlist.com/202403/16/WCsDk21n5w3/video/index.m3u8';
     //aes,iv,niuniu
-    //let inputUrl = "https://64.32.20.246/play/QeZBnDge/index.m3u8";
+    //let inputUrl = 'https://64.32.20.246/play/QeZBnDge/index.m3u8';
+    //x-map
+    //let inputUrl = 'https://europe.olemovienews.com/hlstimeofffmp4/20210226/fICqcpqr/mp4/fICqcpqr.mp4/master.m3u8';
+
+    log.info(`Downloading: inputUrl=${inputUrl} outputFile=${outputFile} options=${JSON.stringify(downloadOptions)}`);
 
     let dot = outputFile.lastIndexOf('.');
     let ofile = (dot == -1) ? outputFile : outputFile.slice(0, dot);
     if (!fs.existsSync(ofile)) {
         await fs.promises.mkdir(ofile, { recursive: true });
     }
-
     let parser;
     let downloadManager = new DownloadManager(downloadOptions);
     for (let i = 0; i < 2; i++) {
@@ -154,8 +164,13 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
     }
 }
 
+const stopDownloadM3u8 = () => {
+    log.info('Stopping download');
+    downloadProcess.isStop = true;
+}
+
 const getDownloadProgress = () => {
     return downloadProcess;
 }
 
-export { downloadM3u8, getDownloadProgress };
+export { downloadM3u8, stopDownloadM3u8, getDownloadProgress };

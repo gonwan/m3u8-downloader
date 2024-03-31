@@ -75,7 +75,7 @@ class DownloadManager {
             .buffer();
     }
 
-    async downloadOneSegment(seg: SegInfo, statCallback?: StatCallback) {
+    async downloadOneSegment(seg: SegInfo, signal: AbortSignal, statCallback?: StatCallback) {
         let outputPath = path.join(seg.ptPath, `${seg.idx}.ts`);
         if (fs.existsSync(outputPath)) {
             return;
@@ -92,7 +92,8 @@ class DownloadManager {
                 },
                 retry: {
                     limit: this.options.retries
-                }
+                },
+                signal: signal
             })
             .on('downloadProgress', progress => {
                 if (statCallback) {
@@ -134,13 +135,14 @@ class DownloadManager {
             downloadProgress.transferredBytes = current;
             downloadProgress.speed = current - prev;
             }, 1000);
+        const abortController = new AbortController();
         for (let i = 0; i < segs.length; i++) {
             if (downloadProgress.isStop) {
                 break;
             }
             // @ts-ignore
             if (requests.size <= this.options.concurrency) {
-                let p = this.downloadOneSegment(segs[i], statCallback).then(() => {
+                let p = this.downloadOneSegment(segs[i], abortController.signal, statCallback).then(() => {
                     requests.delete(segs[i].idx);
                     downloadProgress.transferredSegs++;
                 });
@@ -151,12 +153,13 @@ class DownloadManager {
             }
         }
         if (downloadProgress.isStop) {
-            for (let f of requests.values()) {
-                f.cancel();
+            try {
+                abortController.abort();
+            } catch (e) {
+                log.info('hahah');
             }
-        } else {
-            await Promise.all(requests.values());
         }
+        await Promise.all(requests.values());
         /* sleep to get progress updated to 100% */
         await new Promise(r => setTimeout(r, 1000));
         clearInterval(statTimer);
