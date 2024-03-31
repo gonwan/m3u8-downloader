@@ -7,6 +7,8 @@ import {downloadM3u8, getDownloadProgress } from "../src/lib/m3u8downloader";
 import { DownloadOptions } from "../src/lib/download";
 import { ffmpegInit } from "../src/lib/ffmpeg";
 
+log.transports.console.level = 'info';
+log.transports.console.level = 'verbose';
 Object.assign(console, log.functions);
 
 /*

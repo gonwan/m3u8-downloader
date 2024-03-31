@@ -8,9 +8,6 @@ import { Parser } from 'm3u8-parser';
 import { SegInfo, DownloadProgress, DownloadOptions, DownloadManager } from './download';
 import { binaryConcat, ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg";
 
-log.transports.console.level = 'info';
-log.transports.console.level = 'verbose';
-
 let downloadProcess: DownloadProgress;
 
 /**
@@ -78,6 +75,7 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
         let part = (parser.manifest.discontinuityStarts && parser.manifest.discontinuityStarts.length > 0) ? -1 : 0;
         let partMap = new Map<number, SegInfo[]>();
         let keyMap = new Map<string, Buffer>();
+        let hasXMap = false;
         if (part == 0) {
             partMap.set(part, []);
         }
@@ -106,8 +104,14 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
             } else {
                 partMap.get(part)?.push({ idx: i, dlUrl: dlUrl, ptPath: ptPath });
             }
-            if (seg.map) { /* EXT-MAP-KEY */
-                // FIXME
+            if (seg.map && seg.map.uri) { /* EXT-MAP-KEY */
+                if (!hasXMap) {
+                    let xMapUrl = url.resolve(inputUrl, seg.map.uri);
+                    let xMapBuff = await downloadManager.downloadFile(xMapUrl);
+                    fs.promises.writeFile(path.join(ofile, 'init.mp4'), xMapBuff);
+                    log.info(`Got map file from: ${xMapUrl}`);
+                    hasXMap = true;
+                }
             }
         }
         let segs: SegInfo[] = [];
@@ -130,12 +134,13 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
         for (let [_, v] of partMap) {
             if (v && v.length > 0) {
                 let ptPath = v[0].ptPath;
-                let tsFiles = v.map(seg => `${seg.idx}.ts`);
+                let tsFiles = hasXMap ? [path.join('..', 'init.mp4')] : [];
+                v.forEach((seg) => tsFiles.push(`${seg.idx}.ts`));
                 await ffmpegConcat(tsFiles, ptPath, ptPath, 'mpegts');
             }
         }
         /* now merge all */
-        let partFiles: string[] = [];
+        let partFiles = [];
         for (let [k, v] of partMap) {
             if (v && v.length > 0) {
                 partFiles.push(`part${k}.ts`)

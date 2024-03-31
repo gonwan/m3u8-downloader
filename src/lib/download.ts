@@ -76,6 +76,10 @@ class DownloadManager {
     }
 
     async downloadOneSegment(seg: SegInfo, statCallback?: StatCallback) {
+        let outputPath = path.join(seg.ptPath, `${seg.idx}.ts`);
+        if (fs.existsSync(outputPath)) {
+            return;
+        }
         let buff = await got.get(seg.dlUrl,
             {
                 headers: this.options.headers ? this.mapToRecord(this.options.headers) : undefined,
@@ -112,7 +116,6 @@ class DownloadManager {
                     break;
             }
         }
-        let outputPath = path.join(seg.ptPath, `${seg.idx}.ts`);
         await fs.promises.writeFile(outputPath, buff);
     }
 
