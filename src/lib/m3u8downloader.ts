@@ -120,6 +120,7 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
     /* playlist */
     let videoUrl = '';
     let audioUrl = '';
+    let videoCodec = 'h264';
     if (parser.manifest.playlists) {
         await fs.promises.writeFile(path.join(ofile, 'playlist.m3u8'), m3u8Buff);
         let matchedVideoUri = '';
@@ -135,6 +136,14 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
                 matchedVideoUri = pl.uri || '';
                 matchedVideoRes = `${w}x${h}`;
                 matchedAudio = pl.attributes?.AUDIO || '';
+                let codecs : string = pl.attributes?.CODECS;
+                if (codecs) {
+                    if (codecs.indexOf('hvc1') != -1) {
+                        videoCodec = 'h265';
+                    } else {
+                        videoCodec = 'h264';
+                    }
+                }
             }
         }
         if (matchedVideoUri === '') {
@@ -225,7 +234,7 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
                 }
             }
         }
-        await ffmpegConcat(videoPartFiles, audioPartFiles, ofile, ofile, 'mp4');
+        await ffmpegConcat(videoPartFiles, audioPartFiles, ofile, ofile, videoCodec);
     }
     /* clean up */
     if (!downloadOptions.preserveFiles) {

@@ -71,15 +71,26 @@ const ffmpegConcat = async (files: string[], files2: string[], outputFile: strin
             ff = ff.input(protocol);
         }
         switch (format) {
-            case 'mp4':
+            case 'h264':
                 ff = ff.addOptions([
-                        '-map \"0:v?\"',
-                        hasAudio ? '-map \"1:a?\"' : '-map \"0:a?\"',
-                        '-map \"0:s?\"',
+                        '-map 0:v?',
+                        hasAudio ? '-map 1:a?' : '-map 0:a?',
+                        '-map 0:s?',
                         '-c copy',
                         '-bsf:a aac_adtstoasc',
                         '-bsf:v h264_mp4toannexb'
                     ])
+                    .output(`${outputFile}.mp4`)
+                break;
+            case 'h265':
+                ff = ff.addOptions([
+                    '-map 0:v?',
+                    hasAudio ? '-map 1:a?' : '-map 0:a?',
+                    '-map 0:s?',
+                    '-c copy',
+                    '-bsf:a aac_adtstoasc',
+                    '-bsf:v hevc_mp4toannexb'
+                ])
                     .output(`${outputFile}.mp4`)
                 break;
             case 'mpegts':
