@@ -4,8 +4,9 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import log from 'electron-log/main';
 import { ffmpegInit } from '../src/lib/ffmpeg';
-import {downloadM3u8, getDownloadProgress, stopDownloadM3u8} from '../src/lib/m3u8downloader';
+import { downloadM3u8, getDownloadProgress, stopDownloadM3u8 } from '../src/lib/m3u8downloader';
 import { DownloadOptions } from '../src/lib/download';
+import { openLogFolder } from '../src/lib/utils'
 
 log.transports.console.level = 'verbose';
 log.transports.file.level = 'verbose';
@@ -66,6 +67,10 @@ const _getDownloadProgress = async (event: Electron.IpcMainInvokeEvent) => {
     return getDownloadProgress();
 }
 
+const _openLogFolder = async (event: Electron.IpcMainInvokeEvent) => {
+    return openLogFolder();
+}
+
 const createWindow = () => {
     const win = new BrowserWindow({
         title: 'Main window',
@@ -102,6 +107,7 @@ app.whenReady().then(() => {
     ipcMain.handle('downloadM3u8', _downloadM3u8);
     ipcMain.handle('stopDownloadM3u8', _stopDownloadM3u8);
     ipcMain.handle('getDownloadProgress', _getDownloadProgress);
+    ipcMain.handle('openLogFolder', _openLogFolder);
     createWindow();
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
