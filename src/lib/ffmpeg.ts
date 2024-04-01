@@ -50,13 +50,15 @@ const binaryConcat = async (files: string[], outputFile: string, workingDir: str
  * Concat segments of media files.
  * @see https://trac.ffmpeg.org/wiki/Concatenate
  * @see https://www.ffmpeg.org/ffmpeg.html#Stream-selection
- * @param files files to concat
+ * @param files input files to concat
+ * @param files2 another set of input files to concat, can be null
  * @param outputFile output file without extension
  * @param workingDir working directory
  * @param format output format
  */
-const ffmpegConcat = async (files: string[], outputFile: string, workingDir: string, format: string) => {
+const ffmpegConcat = async (files: string[], files2: string[], outputFile: string, workingDir: string, format: string) => {
     return new Promise((resolve, reject) => {
+        let hasAudio = files2 && files2.length > 0;
         let protocol = 'concat:' + files.join('|');
         let ff = ffmpeg(
             {
@@ -64,12 +66,15 @@ const ffmpegConcat = async (files: string[], outputFile: string, workingDir: str
                 cwd: workingDir
             })
             .input(protocol);
+        if (hasAudio) {
+            protocol = 'concat:' + files2.join('|');
+            ff = ff.input(protocol);
+        }
         switch (format) {
             case 'mp4':
-                ff = ff.addOptions(
-                    [
+                ff = ff.addOptions([
                         '-map \"0:v?\"',
-                        '-map \"0:a?\"',
+                        hasAudio ? '-map \"1:a?\"' : '-map \"0:a?\"',
                         '-map \"0:s?\"',
                         '-c copy',
                         '-bsf:a aac_adtstoasc',
@@ -78,14 +83,21 @@ const ffmpegConcat = async (files: string[], outputFile: string, workingDir: str
                     .output(`${outputFile}.mp4`)
                 break;
             case 'mpegts':
-                ff = ff.addOptions(
-                    [
+                ff = ff.addOptions([
                         '-map 0',
                         '-c copy',
                         '-copy_unknown',
-                        '-f mpegts',
+                        '-f mpegts'
                     ])
                     .output(`${outputFile}.ts`);
+                break;
+            case 'aac':
+                ff = ff.addOptions([
+                        '-map 0:a',
+                        '-c copy',
+                        '-copy_unknown'
+                    ])
+                    .output(`${outputFile}.aac`);
                 break;
             default:
                 break;

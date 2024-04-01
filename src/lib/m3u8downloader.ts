@@ -10,6 +10,73 @@ import { binaryConcat, ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg";
 
 let downloadProcess: DownloadProgress;
 
+const parseSegments = async(inputUrl: string, ofile: string, downloadManager: DownloadManager, isVideo: boolean) => {
+    let m3u8Buff = await downloadManager.downloadFile(inputUrl);
+    await fs.promises.writeFile(path.join(ofile, `${isVideo ? 'video' : 'audio'}.m3u8`), m3u8Buff);
+    let parser = new Parser();
+    parser.push(m3u8Buff);
+    parser.end();
+    //log.verbose(isVideo ? 'Got video:' : 'Got audio:');
+    //log.verbose(parser.manifest);
+    if (!parser.manifest.segments) {
+        log.error('No segment found');
+    } else {
+        let part = (parser.manifest.discontinuityStarts && parser.manifest.discontinuityStarts.length > 0) ? -1 : 0;
+        let partMap = new Map<number, SegInfo[]>();
+        let keyMap = new Map<string, Buffer>();
+        let hasXMap = false;
+        if (part == 0) {
+            partMap.set(part, []);
+        }
+        for (let i = 0; i < parser.manifest.segments.length; i++) {
+            let seg = parser.manifest.segments[i];
+            if (seg.discontinuity) {
+                part++;
+                partMap.set(part, []);
+            }
+            let dlUrl = url.resolve(inputUrl, seg.uri);
+            log.verbose(`Got seg${i}: ${dlUrl}`);
+            let ptPath = path.join(ofile, isVideo ? 'video' : 'audio', `part${part}`);
+            if (!fs.existsSync(ptPath)) {
+                await fs.promises.mkdir(ptPath, { recursive: true });
+            }
+            if (seg.key) { /* EXT-X-KEY */
+                let keyUrl = url.resolve(inputUrl, seg.key.uri);
+                let key = keyMap.get(keyUrl);
+                if (!key) {
+                    key = await downloadManager.downloadFile(keyUrl);
+                    keyMap.set(keyUrl, key);
+                    log.info(`Got key from: ${keyUrl}`);
+                    log.info(`Got key=${key}, iv=${seg.key.iv} method=${seg.key.method}`);
+                }
+                partMap.get(part)?.push({
+                    idx: i,
+                    dlUrl: dlUrl,
+                    ptPath: ptPath,
+                    length: seg.byterange?.length,
+                    offset: seg.byterange?.offset,
+                    key: key,
+                    keyIV: seg.key.iv,
+                    keyMethod: seg.key.method
+                });
+            } else {
+                partMap.get(part)?.push({idx: i, dlUrl: dlUrl, ptPath: ptPath,
+                    length: seg.byterange?.length, offset: seg.byterange?.offset });
+            }
+            if (seg.map && seg.map.uri) { /* EXT-MAP-KEY */
+                if (!hasXMap) {
+                    let xMapUrl = url.resolve(inputUrl, seg.map.uri);
+                    let xMapBuff = await downloadManager.downloadFile(xMapUrl, seg.map.byterange?.length, seg.map.byterange?.offset);
+                    await fs.promises.writeFile(path.join(ofile, isVideo ? 'video' : 'audio', 'init.mp4'), xMapBuff);
+                    log.info(`Got map file from: ${xMapUrl}`);
+                    hasXMap = true;
+                }
+            }
+        }
+        return partMap;
+    }
+}
+
 /**
  * Download file from an m3u8 url
  * @param inputUrl
@@ -44,114 +111,121 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
     }
     let parser;
     let downloadManager = new DownloadManager(downloadOptions);
-    for (let i = 0; i < 2; i++) {
-        let m3u8Buff = await downloadManager.downloadFile(inputUrl);
-        parser = new Parser();
-        parser.push(m3u8Buff);
-        parser.end();
-        //log.verbose('Got manifest:');
-        //log.verbose(parser.manifest);
-        if (parser.manifest.playlists) {
-            await fs.promises.writeFile(path.join(ofile, 'master.m3u8'), m3u8Buff);
-            let matchedUri = '';
-            let matchedRes = '';
-            let maxWidth = 0;
-            /* the master one, select highest resolution */
-            for (let pl of parser.manifest.playlists) {
-                let w = pl.attributes?.RESOLUTION?.width || 0;
-                if (w > maxWidth) {
-                    let h = pl.attributes?.RESOLUTION?.height || 0;
-                    maxWidth = w;
-                    matchedUri = pl.uri;
-                    matchedRes = `${w}x${h}`;
+    let m3u8Buff = await downloadManager.downloadFile(inputUrl);
+    parser = new Parser();
+    parser.push(m3u8Buff);
+    parser.end();
+    //log.verbose('Got playlist:');
+    //log.verbose(parser.manifest);
+    /* playlist */
+    let videoUrl = '';
+    let audioUrl = '';
+    if (parser.manifest.playlists) {
+        await fs.promises.writeFile(path.join(ofile, 'playlist.m3u8'), m3u8Buff);
+        let matchedVideoUri = '';
+        let matchedVideoRes = '';
+        let maxVideoWidth = 0;
+        let matchedAudio = '';
+        /* select highest resolution */
+        for (let pl of parser.manifest.playlists) {
+            let w = pl.attributes?.RESOLUTION?.width || 0;
+            if (w > maxVideoWidth) {
+                let h = pl.attributes?.RESOLUTION?.height || 0;
+                maxVideoWidth = w;
+                matchedVideoUri = pl.uri || '';
+                matchedVideoRes = `${w}x${h}`;
+                matchedAudio = pl.attributes?.AUDIO || '';
+            }
+        }
+        if (matchedVideoUri === '') {
+            log.error('No playlist found');
+        } else {
+            videoUrl = url.resolve(inputUrl, matchedVideoUri);
+            log.info(`Selecting video resolution ${matchedVideoRes}: ${videoUrl}`);
+            let matchedAudioUri = '';
+            let matchedAudioLang = '';
+            if (matchedAudio !== '' && parser.manifest.mediaGroups) {
+                let langs = parser.manifest.mediaGroups.AUDIO[matchedAudio];
+                if (langs) {
+                    for (const [k, v] of Object.entries<any>(langs)) {
+                        if (matchedAudioLang === '') {
+                            matchedAudioLang = v.language;
+                            matchedAudioUri = v.uri || '';
+                        } else if (v.language === 'en') {
+                            matchedAudioLang = v.language;
+                            matchedAudioUri = v.uri || '';
+                        }
+                    }
                 }
             }
-            /* reconstruct input */
-            if (matchedUri === '') {
-                log.error('No playlist found');
-                break;
-            } else {
-                inputUrl = url.resolve(inputUrl, matchedUri);
-                log.info(`Selecting resolution ${matchedRes}: ${inputUrl}`);
+            if (matchedAudioUri !== '') {
+                audioUrl = url.resolve(inputUrl, matchedAudioUri);
+                log.info(`Selecting audio language ${matchedAudioLang}: ${audioUrl}`);
             }
-        } else {
-            await fs.promises.writeFile(path.join(ofile, 'index.m3u8'), m3u8Buff);
-            break;
         }
     }
-    /* work with segments */
-    if (!parser.manifest.segments) {
-        log.error('No segment found');
-    } else {
-        let part = (parser.manifest.discontinuityStarts && parser.manifest.discontinuityStarts.length > 0) ? -1 : 0;
-        let partMap = new Map<number, SegInfo[]>();
-        let keyMap = new Map<string, Buffer>();
-        let hasXMap = false;
-        if (part == 0) {
-            partMap.set(part, []);
-        }
-        for (let i = 0; i < parser.manifest.segments.length; i++) {
-            let seg = parser.manifest.segments[i];
-            if (seg.discontinuity) {
-                part++;
-                partMap.set(part, []);
-            }
-            let dlUrl = url.resolve(inputUrl, seg.uri);
-            log.verbose(`Got seg${i}: ${dlUrl}`);
-            let ptPath = path.join(ofile, `part${part}`);
-            if (!fs.existsSync(ptPath)) {
-                await fs.promises.mkdir(ptPath);
-            }
-            if (seg.key) { /* EXT-X-KEY */
-                let keyUrl = url.resolve(inputUrl, seg.key.uri);
-                let key = keyMap.get(keyUrl);
-                if (!key) {
-                    key = await downloadManager.downloadFile(keyUrl);
-                    keyMap.set(keyUrl, key);
-                    log.info(`Got key from: ${keyUrl}`);
-                    log.info(`Got key=${key}, iv=${seg.key.iv} method=${seg.key.method}`);
-                }
-                partMap.get(part)?.push({ idx: i, dlUrl: dlUrl, ptPath: ptPath, key: key, keyIV: seg.key.iv, keyMethod: seg.key.method });
-            } else {
-                partMap.get(part)?.push({ idx: i, dlUrl: dlUrl, ptPath: ptPath });
-            }
-            if (seg.map && seg.map.uri) { /* EXT-MAP-KEY */
-                if (!hasXMap) {
-                    let xMapUrl = url.resolve(inputUrl, seg.map.uri);
-                    let xMapBuff = await downloadManager.downloadFile(xMapUrl);
-                    fs.promises.writeFile(path.join(ofile, 'init.mp4'), xMapBuff);
-                    log.info(`Got map file from: ${xMapUrl}`);
-                    hasXMap = true;
+    /* download video & audio segments */
+    let segs: SegInfo[] = [];
+    let videoPartMap;
+    if (videoUrl) {
+        videoPartMap = await parseSegments(videoUrl, ofile, downloadManager, true);
+        if (videoPartMap) {
+            let c = 0;
+            for (let [_, v] of videoPartMap) {
+                for (let seg of v) {
+                    segs.push(seg);
+                    c++;
                 }
             }
+            log.info(`Found ${c} video segments in ${videoPartMap.size} parts`);
         }
-        let segs: SegInfo[] = [];
-        for (let [_, v] of partMap) {
-            for (let seg of v) {
-                segs.push(seg);
+    }
+    let audioPartMap;
+    if (audioUrl) {
+        audioPartMap = await parseSegments(audioUrl, ofile, downloadManager, false);
+        if (audioPartMap) {
+            let c = 0;
+            for (let [_, v] of audioPartMap) {
+                for (let seg of v) {
+                    segs.push(seg);
+                    c++;
+                }
             }
+            log.info(`Found ${c} audio segments in ${audioPartMap.size} parts`);
         }
-        log.info(`Found ${segs.length} segments in ${part+1} parts`);
-        await downloadManager.downloadSegments(segs, downloadProcess);
-        if (!downloadProcess.isStop) {
-            /* now merge parts */
-            for (let [_, v] of partMap) {
+    }
+    await downloadManager.downloadSegments(segs, downloadProcess);
+    /* now merge parts */
+    if (!downloadProcess.isStop) {
+        let videoPartFiles = [];
+        let audioPartFiles = [];
+        if (videoPartMap) {
+            let hasXMap = fs.existsSync(path.join(ofile, 'video', 'init.mp4'));
+            for (let [k, v] of videoPartMap) {
                 if (v && v.length > 0) {
                     let ptPath = v[0].ptPath;
                     let tsFiles = hasXMap ? [path.join('..', 'init.mp4')] : [];
                     v.forEach((seg) => tsFiles.push(`${seg.idx}.ts`));
-                    await ffmpegConcat(tsFiles, ptPath, ptPath, 'mpegts');
+                    //await binaryConcat(tsFiles, ptPath, ptPath);
+                    await ffmpegConcat(tsFiles, null, ptPath, ptPath, 'mpegts');
+                    videoPartFiles.push(path.join('video', `part${k}.ts`));
                 }
             }
-            /* now merge all */
-            let partFiles = [];
-            for (let [k, v] of partMap) {
-                if (v && v.length > 0) {
-                    partFiles.push(`part${k}.ts`)
-                }
-            }
-            await ffmpegConcat(partFiles, ofile, ofile, 'mp4');
         }
+        if (audioPartMap) {
+            let hasXMap = fs.existsSync(path.join(ofile, 'audio', 'init.mp4'));
+            for (let [k, v] of audioPartMap) {
+                if (v && v.length > 0) {
+                    let ptPath = v[0].ptPath;
+                    let tsFiles = hasXMap ? [path.join('..', 'init.mp4')] : [];
+                    v.forEach((seg) => tsFiles.push(`${seg.idx}.ts`));
+                    //await binaryConcat(tsFiles, ptPath, ptPath);
+                    await ffmpegConcat(tsFiles, null, ptPath, ptPath, 'aac');
+                    audioPartFiles.push(path.join('audio', `part${k}.aac`));
+                }
+            }
+        }
+        await ffmpegConcat(videoPartFiles, audioPartFiles, ofile, ofile, 'mp4');
     }
     /* clean up */
     if (!downloadOptions.preserveFiles) {

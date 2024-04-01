@@ -10,6 +10,8 @@ type SegInfo = {
     idx: number;
     dlUrl: string;
     ptPath: string;
+    length?: number;
+    offset?: number;
     key?: Buffer;
     keyIV?: Uint32Array;
     keyMethod?: string
@@ -57,10 +59,14 @@ class DownloadManager {
         return r;
     }
 
-    async downloadFile(url: string) {
+    async downloadFile(url: string, length?: number, offset?: number) {
+        let hds = this.options.headers ? new Map(this.options.headers) : new Map;
+        if (typeof length !== 'undefined' && typeof offset !== 'undefined') {
+            hds.set('Range', `bytes=${offset}-${offset+length-1}`);
+        }
         return got.get(url,
             {
-                headers: this.options.headers ? this.mapToRecord(this.options.headers) : undefined,
+                headers: (hds.size > 0) ? this.mapToRecord(hds) : undefined,
                 agent: {
                     http: this.options.proxy ? new HttpProxyAgent(this.options.proxy) : undefined,
                     https: this.options.proxy ? new HttpsProxyAgent(this.options.proxy) : undefined
@@ -80,9 +86,13 @@ class DownloadManager {
         if (fs.existsSync(outputPath)) {
             return;
         }
+        let hds = this.options.headers ? new Map(this.options.headers) : new Map;
+        if (typeof seg.length !== 'undefined' && typeof seg.offset !== 'undefined') {
+            hds.set('Range', `bytes=${seg.offset}-${seg.offset+seg.length-1}`);
+        }
         let buff = await got.get(seg.dlUrl,
             {
-                headers: this.options.headers ? this.mapToRecord(this.options.headers) : undefined,
+                headers: (hds.size > 0) ? this.mapToRecord(hds) : undefined,
                 agent: {
                     http: this.options.proxy ? new HttpProxyAgent(this.options.proxy) : undefined,
                     https: this.options.proxy ? new HttpsProxyAgent(this.options.proxy) : undefined
