@@ -77,7 +77,7 @@ const ffmpegConcat = async (files: string[], files2: string[], outputFile: strin
                         hasAudio ? '-map 1:a?' : '-map 0:a?',
                         '-map 0:s?',
                         '-c copy',
-                        '-bsf:a aac_adtstoasc',
+                        //'-bsf:a aac_adtstoasc',
                         '-bsf:v h264_mp4toannexb'
                     ])
                     .output(`${outputFile}.mp4`)
@@ -88,7 +88,7 @@ const ffmpegConcat = async (files: string[], files2: string[], outputFile: strin
                     hasAudio ? '-map 1:a?' : '-map 0:a?',
                     '-map 0:s?',
                     '-c copy',
-                    '-bsf:a aac_adtstoasc',
+                    //'-bsf:a aac_adtstoasc',
                     '-bsf:v hevc_mp4toannexb'
                 ])
                     .output(`${outputFile}.mp4`)

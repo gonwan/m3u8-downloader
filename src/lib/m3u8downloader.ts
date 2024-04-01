@@ -121,6 +121,7 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
     let videoUrl = '';
     let audioUrl = '';
     let videoCodec = 'h264';
+    let audioCodec = 'aac';
     if (parser.manifest.playlists) {
         await fs.promises.writeFile(path.join(ofile, 'playlist.m3u8'), m3u8Buff);
         let matchedVideoUri = '';
@@ -157,12 +158,19 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
                 let langs = parser.manifest.mediaGroups.AUDIO[matchedAudio];
                 if (langs) {
                     for (const [k, v] of Object.entries<any>(langs)) {
-                        if (matchedAudioLang === '') {
+                        if (matchedAudioLang === '' || v.language === 'en' || v.language === 'en-US') {
                             matchedAudioLang = v.language;
                             matchedAudioUri = v.uri || '';
-                        } else if (v.language === 'en') {
-                            matchedAudioLang = v.language;
-                            matchedAudioUri = v.uri || '';
+                            let codecs : string = v.attributes?.CODECS;
+                            if (codecs) {
+                                if (codecs.indexOf('ac-3') != -1) {
+                                    audioCodec = 'ac3';
+                                } else if (codecs.indexOf('ec-3') != -1) {
+                                    audioCodec = 'ec3';
+                                } else {
+                                    audioCodec = 'aac'; /* mp4a */
+                                }
+                            }
                         }
                     }
                 }
@@ -229,8 +237,8 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
                     let tsFiles = hasXMap ? [path.join('..', 'init.mp4')] : [];
                     v.forEach((seg) => tsFiles.push(`${seg.idx}.ts`));
                     //await binaryConcat(tsFiles, ptPath, ptPath);
-                    await ffmpegConcat(tsFiles, null, ptPath, ptPath, 'aac');
-                    audioPartFiles.push(path.join('audio', `part${k}.aac`));
+                    await ffmpegConcat(tsFiles, null, ptPath, ptPath, 'mpegts');
+                    audioPartFiles.push(path.join('audio', `part${k}.ts`));
                 }
             }
         }
