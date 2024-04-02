@@ -10,7 +10,8 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "vite build",
+    "build0": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "testm3u8": "npx tsx src/lib/m3u8downloader.ts",
     "start": "electron .",

@@ -36,10 +36,10 @@ process.on("uncaughtException", (err) => {
 });
 
 process.on("unhandledRejection", (err) => {
-    if (!(err instanceof Error)) {
-        return;
+    let stack = err;
+    if (err instanceof Error) {
+        stack = err.stack ? err.stack : `${err.name}: ${err.message}`;
     }
-    const stack = err.stack ? err.stack : `${err.name}: ${err.message}`;
     const message = 'Uncaught Exception:\n' + stack;
     dialog.showErrorBox('Error in the main process', message);
     app.exit(-1);
@@ -47,16 +47,19 @@ process.on("unhandledRejection", (err) => {
 
 const _showSaveDialog = async (event: Electron.IpcMainInvokeEvent, extension: string)=> {
     let win = BrowserWindow.fromWebContents(event.sender);
-    if (win) {
-        return dialog.showSaveDialog(win,{
-            filters: [{ name: extension, extensions: [ extension ] }],
-            properties: ['createDirectory', 'showOverwriteConfirmation']
-        });
-    }
+    return dialog.showSaveDialog(win,{
+        filters: [{ name: extension, extensions: [ extension ] }],
+        properties: ['createDirectory', 'showOverwriteConfirmation']
+    });
 }
 
 const _downloadM3u8 = async (event: Electron.IpcMainInvokeEvent, inputUrl: string, outputFile: string, downloadOptions: DownloadOptions)=> {
-    await downloadM3u8(inputUrl, outputFile, downloadOptions);
+    try {
+        await downloadM3u8(inputUrl, outputFile, downloadOptions);
+    } catch (err) {
+        /* handle error by ourself */
+        return err;
+    }
 }
 
 const _stopDownloadM3u8 = async (event: Electron.IpcMainInvokeEvent) => {

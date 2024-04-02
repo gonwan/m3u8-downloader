@@ -14,9 +14,7 @@ const ffmpegInit = () => {
         ffmpeg.setFfmpegPath(ffmpegPath);
         log.info(`Using ffmpeg: ${ffmpegPath}`);
     } catch (err) {
-        if (err instanceof Error) {
-            log.error('Failed to find ffmpeg', err);
-        }
+        log.error('Failed to find ffmpeg', err);
     }
 }
 
@@ -37,9 +35,8 @@ const binaryConcat = async (files: string[], outputFile: string, workingDir: str
             await ofile.appendFile(await fs.promises.readFile(f));
         }
     } catch (err) {
-        if (err instanceof Error) {
-            log.error(`Binary concat error: ${err.message}`);
-        }
+        log.error('Binary concat failed!');
+        throw err;
     } finally {
         await ofile?.close();
         process.chdir(cwd);
@@ -78,19 +75,19 @@ const ffmpegConcat = async (files: string[], files2: string[], outputFile: strin
                         '-map 0:s?',
                         '-c copy',
                         //'-bsf:a aac_adtstoasc',
-                        '-bsf:v h264_mp4toannexb'
+                        '-bsf:v h264_mp4toannexb11'
                     ])
                     .output(`${outputFile}.mp4`)
                 break;
             case 'h265':
                 ff = ff.addOptions([
-                    '-map 0:v?',
-                    hasAudio ? '-map 1:a?' : '-map 0:a?',
-                    '-map 0:s?',
-                    '-c copy',
-                    //'-bsf:a aac_adtstoasc',
-                    '-bsf:v hevc_mp4toannexb'
-                ])
+                        '-map 0:v?',
+                        hasAudio ? '-map 1:a?' : '-map 0:a?',
+                        '-map 0:s?',
+                        '-c copy',
+                        //'-bsf:a aac_adtstoasc',
+                        '-bsf:v hevc_mp4toannexb11'
+                    ])
                     .output(`${outputFile}.mp4`)
                 break;
             case 'mpegts':
@@ -115,15 +112,15 @@ const ffmpegConcat = async (files: string[], files2: string[], outputFile: strin
         }
         ff
             .on('start', (cmdline) => {
-                log.verbose(`Running Ffmepg concat in ${format} format: ${cmdline}`);
+                log.verbose(`Running ffmepg concat in ${format} format: ${cmdline}`);
             })
             .on('end', () => {
                 log.info('Ffmpeg concat finished!');
-                resolve(null);
+                resolve();
             })
             .on('error', (err) => {
-                log.error(`Ffmpeg concat error: ${err.message}`);
-                reject();
+                log.error('Ffmpeg concat failed!');
+                reject(err);
             })
             .run();
     });
@@ -152,11 +149,11 @@ const ffmpegConvertToMpegTs = async (file: string) => {
             })
             .on('end', () => {
                 log.info('Conversion finished!');
-                resolve(null);
+                resolve();
             })
             .on('error', (err) => {
-                log.error(`Conversion error: ${err.message}`);
-                reject();
+                log.error('Conversion to mpegts failed!');
+                reject(err);
             })
             .run();
     });

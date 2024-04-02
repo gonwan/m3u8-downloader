@@ -40,6 +40,14 @@ const selectFilePath = async () => {
 }
 
 const onGo = async () => {
+    if (form.m3u8Url === '') {
+       await ElMessageBox.alert('Empty m3u8 url!');
+       return;
+    }
+    if (form.downloadFilePath === '') {
+      await ElMessageBox.alert('Empty download file path!');
+      return;
+    }
     isDownloading.value = true;
     let headerRecord = new Map();
     form.httpHeaders.split(/\n/).forEach((value) => {
@@ -80,8 +88,13 @@ const onGo = async () => {
             return;
         }
     }, 1000);
-    await prom;
-    downloadSpeed.value = isCancel ? 'Download canceled!' : 'Download finished!';
+    let res = await prom;
+    if (res instanceof Error) {
+        console.log('err!!', res);
+        downloadSpeed.value = 'Download error!';
+    } else {
+        downloadSpeed.value = isCancel ? 'Download canceled!' : 'Download finished!';
+    }
     isDownloading.value = false;
 }
 
@@ -98,14 +111,14 @@ const onCancel = async () => {
     <el-form :model="form" label-width="auto" max-w-800>
       <el-row>
         <el-col :span="24">
-          <el-form-item label="Download from" required>
+          <el-form-item label="M3u8 Url" required>
             <el-input v-model="form.m3u8Url" placeholder="m3u8 url: [http|https]://address/to/some.m3u8" clearable />
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="22">
-            <el-form-item label="Download as" required>
+            <el-form-item label="Download file path" required>
               <el-input v-model="form.downloadFilePath" placeholder="download file path" clearable />
             </el-form-item>
         </el-col>
@@ -164,7 +177,11 @@ const onCancel = async () => {
     </el-form>
     <el-row>
       <el-col :span="24">
-        <el-text>{{ downloadSpeed }}</el-text>
+        <el-text inline-block>{{ downloadSpeed }}</el-text>
+      </el-col>
+    </el-row>
+    <el-row>
+      <el-col :span="24">
         <el-progress :text-inside="true" :stroke-width="20" :percentage="downloadProgress" />
       </el-col>
     </el-row>
