@@ -21,7 +21,6 @@
     "postinstall": "patch-package && electron-builder install-app-deps"
   },
   "dependencies": {
-    "@element-plus/icons-vue": "^2.3.1",
     "@types/fluent-ffmpeg": "^2.1.24",
     "electron-log": "^5.1.2",
     "element-plus": "^2.6.3",

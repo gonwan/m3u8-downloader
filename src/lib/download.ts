@@ -116,11 +116,11 @@ class DownloadManager {
                 case 'AES-128':
                     if (seg.key && seg.keyIV) {
                         let cipher = crypto.createDecipheriv('aes-128-cbc', seg.key, seg.keyIV);
-                        buff = Buffer.concat([ cipher.update(buff), cipher.final()]);
+                        buff = Buffer.concat([cipher.update(buff), cipher.final()]);
                     }
                     break;
                 case 'SAMPLE-AES':
-                    // FIXME
+                    log.error('SAMPLE-AES not supported!');
                     break;
                 case 'NONE':
                 default:
