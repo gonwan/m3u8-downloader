@@ -17,6 +17,23 @@ type SegInfo = {
     keyMethod?: string
 };
 
+type StreamInfo = {
+    resWidth?: number;
+    resHeight?: number;
+    bandwidth: number;
+    url: string;
+    codecs?: string,
+    audioGroup?: string, /* video */
+    subtitleGroup?: string /* video */
+    name?: string, /* audio/subtitle */
+    language?: string /* audio/subtitle */
+};
+
+type VideoInfo = {
+    video: StreamInfo[],
+    audio: StreamInfo[]
+}
+
 type DownloadProgress = {
     isStop: boolean;
     totalSegs: number;
@@ -30,6 +47,7 @@ type DownloadOptions = {
     /* electron ipc only supports map */
     headers?: Map<string, string | string[]>;
     proxy?: string;
+    autoSelectBest: boolean;
     concurrency?: number;
     timeout?: number;
     retries?: number;
@@ -177,7 +195,7 @@ class DownloadManager {
 
 }
 
-export { SegInfo, DownloadProgress, DownloadOptions, DownloadManager };
+export { StreamInfo, VideoInfo, SegInfo, DownloadProgress, DownloadOptions, DownloadManager };
 
 // master.m3u8 --> playlists.json(no use..already selected), raw.m3u8 --> meta.json...
 // catch awaits...

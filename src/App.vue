@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <el-container class="layout-container-demo" h-screen w-screen>
+  <el-container h-screen w-screen>
     <el-aside width="auto" flex>
       <el-menu mode="vertical" :default-active="$route.path" collapse router flex flex-col>
         <el-menu-item index="/">

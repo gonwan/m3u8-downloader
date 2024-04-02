@@ -5,7 +5,7 @@ import url from 'node:url';
 import log from 'electron-log/main';
 // @ts-ignore
 import { Parser } from 'm3u8-parser';
-import { SegInfo, DownloadProgress, DownloadOptions, DownloadManager } from './download';
+import { StreamInfo, VideoInfo, SegInfo, DownloadProgress, DownloadOptions, DownloadManager } from './download';
 import { binaryConcat, ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg";
 
 let downloadProcess: DownloadProgress;
@@ -77,6 +77,83 @@ const parseSegments = async(inputUrl: string, ofile: string, downloadManager: Do
     }
 }
 
+const checkM3u8Playlist = async (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions) => {
+    let dot = outputFile.lastIndexOf('.');
+    let ofile = (dot == -1) ? outputFile : outputFile.slice(0, dot);
+    if (!fs.existsSync(ofile)) {
+        await fs.promises.mkdir(ofile, { recursive: true });
+    }
+    let downloadManager = new DownloadManager(downloadOptions);
+    let m3u8Buff = await downloadManager.downloadFile(inputUrl);
+    let parser = new Parser();
+    parser.push(m3u8Buff);
+    parser.end();
+    if (!parser.manifest.playlists) {
+        await fs.promises.writeFile(path.join(ofile, 'video.m3u8'), m3u8Buff);
+    } else {
+        log.verbose('Got playlist:');
+        log.verbose(parser.manifest);
+        await fs.promises.writeFile(path.join(ofile, 'playlist.m3u8'), m3u8Buff);
+        let videoInfo: VideoInfo = {video: [], audio: []};
+        for (let pl of parser.manifest.playlists) {
+            let videoStream: StreamInfo = {
+                resWidth: pl.attributes?.RESOLUTION?.width ?? 0,
+                resHeight: pl.attributes?.RESOLUTION?.height ?? 0,
+                bandwidth: pl.attributes?.BANDWIDTH ?? 0,
+                url: pl.uri ? url.resolve(inputUrl, pl.uri) : '',
+                codecs: pl.attributes?.CODECS ?? '',
+                audioGroup: pl.attributes?.AUDIO ?? '',
+                subtitlesGroup: pl.attributes?.SUBTITLES ?? ''
+            };
+            videoInfo.video.push(videoStream);
+        }
+        if (parser.manifest.mediaGroups && parser.manifest.mediaGroups.AUDIO) {
+            for (const [group, groupInfo] of Object.entries<any>(parser.manifest.mediaGroups.AUDIO)) {
+                for (const [lang, langInfo] of Object.entries<any>(groupInfo)) {
+                    let audioStream: StreamInfo = {
+                        audioGroup: group,
+                        name: lang,
+                        url: langInfo.uri ? url.resolve(inputUrl, langInfo.uri) : '',
+                        language: langInfo.language ?? ''
+                    };
+                    videoInfo.audio.push(audioStream);
+                }
+            }
+        }
+        if (!downloadOptions.autoSelectBest) {
+            return videoInfo;
+        } else {
+            let bestVideoStream: StreamInfo = null;
+            let bestAudioStream: StreamInfo = null;
+            let maxVideoWidth = 0;
+            if (videoInfo.video) {
+                for (let si of videoInfo.video) {
+                    if (si.resWidth > maxVideoWidth) {
+                        bestVideoStream = si;
+                    }
+                }
+            }
+            if (bestVideoStream && videoInfo.audio) {
+                for (let si of videoInfo.audio) {
+                    if (si.audioGroup === bestVideoStream.audioGroup || bestVideoStream.audioGroup === '') {
+                        if (bestAudioStream == null || si.language === 'en' || si.language === 'en-US') {
+                            bestAudioStream = si;
+                        }
+                    }
+                }
+            }
+            let bestVideoInfo: VideoInfo = {video: [], audio: []};
+            if (bestVideoStream) {
+                bestVideoInfo.video.push(bestVideoStream);
+            }
+            if (bestAudioStream) {
+                bestVideoInfo.audio.push(bestAudioStream);
+            }
+            return bestVideoInfo;
+        }
+    }
+}
+
 /**
  * Download file from an m3u8 url
  * @param inputUrl
@@ -109,78 +186,12 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
     if (!fs.existsSync(ofile)) {
         await fs.promises.mkdir(ofile, { recursive: true });
     }
-    let parser;
     let downloadManager = new DownloadManager(downloadOptions);
-    let m3u8Buff = await downloadManager.downloadFile(inputUrl);
-    parser = new Parser();
-    parser.push(m3u8Buff);
-    parser.end();
-    //log.verbose('Got playlist:');
-    //log.verbose(parser.manifest);
     /* playlist */
-    let videoUrl = '';
+    let videoUrl = inputUrl;
     let audioUrl = '';
     let videoCodec = 'h264';
     let audioCodec = 'aac';
-    if (parser.manifest.playlists) {
-        await fs.promises.writeFile(path.join(ofile, 'playlist.m3u8'), m3u8Buff);
-        let matchedVideoUri = '';
-        let matchedVideoRes = '';
-        let maxVideoWidth = 0;
-        let matchedAudio = '';
-        /* select highest resolution */
-        for (let pl of parser.manifest.playlists) {
-            let w = pl.attributes?.RESOLUTION?.width || 0;
-            if (w > maxVideoWidth) {
-                let h = pl.attributes?.RESOLUTION?.height || 0;
-                maxVideoWidth = w;
-                matchedVideoUri = pl.uri || '';
-                matchedVideoRes = `${w}x${h}`;
-                matchedAudio = pl.attributes?.AUDIO || '';
-                let codecs : string = pl.attributes?.CODECS;
-                if (codecs) {
-                    if (codecs.indexOf('hvc1') != -1) {
-                        videoCodec = 'h265';
-                    } else {
-                        videoCodec = 'h264';
-                    }
-                }
-            }
-        }
-        if (matchedVideoUri === '') {
-            log.error('No playlist found');
-        } else {
-            videoUrl = url.resolve(inputUrl, matchedVideoUri);
-            log.info(`Selecting video resolution ${matchedVideoRes}: ${videoUrl}`);
-            let matchedAudioUri = '';
-            let matchedAudioLang = '';
-            if (matchedAudio !== '' && parser.manifest.mediaGroups) {
-                let langs = parser.manifest.mediaGroups.AUDIO[matchedAudio];
-                if (langs) {
-                    for (const [k, v] of Object.entries<any>(langs)) {
-                        if (matchedAudioLang === '' || v.language === 'en' || v.language === 'en-US') {
-                            matchedAudioLang = v.language;
-                            matchedAudioUri = v.uri || '';
-                            let codecs : string = v.attributes?.CODECS;
-                            if (codecs) {
-                                if (codecs.indexOf('ac-3') != -1) {
-                                    audioCodec = 'ac3';
-                                } else if (codecs.indexOf('ec-3') != -1) {
-                                    audioCodec = 'ec3';
-                                } else {
-                                    audioCodec = 'aac'; /* mp4a */
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (matchedAudioUri !== '') {
-                audioUrl = url.resolve(inputUrl, matchedAudioUri);
-                log.info(`Selecting audio language ${matchedAudioLang}: ${audioUrl}`);
-            }
-        }
-    }
     /* download video & audio segments */
     let segs: SegInfo[] = [];
     let videoPartMap;
@@ -259,4 +270,4 @@ const getDownloadProgress = () => {
     return downloadProcess;
 }
 
-export { downloadM3u8, stopDownloadM3u8, getDownloadProgress };
+export { checkM3u8Playlist, downloadM3u8, stopDownloadM3u8, getDownloadProgress };

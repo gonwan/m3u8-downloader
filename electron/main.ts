@@ -4,7 +4,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import log from 'electron-log/main';
 import { ffmpegInit } from '../src/lib/ffmpeg';
-import { downloadM3u8, getDownloadProgress, stopDownloadM3u8 } from '../src/lib/m3u8downloader';
+import { checkM3u8Playlist, downloadM3u8, getDownloadProgress, stopDownloadM3u8 } from '../src/lib/m3u8downloader';
 import { DownloadOptions } from '../src/lib/download';
 import { openLogFolder } from '../src/lib/utils'
 
@@ -51,6 +51,15 @@ const _showSaveDialog = async (event: Electron.IpcMainInvokeEvent, extension: st
         filters: [{ name: extension, extensions: [ extension ] }],
         properties: ['createDirectory', 'showOverwriteConfirmation']
     });
+}
+
+const _checkM3u8Playlist = async (event: Electron.IpcMainInvokeEvent, inputUrl: string, outputFile: string, downloadOptions: DownloadOptions)=> {
+    try {
+        return checkM3u8Playlist(inputUrl, outputFile, downloadOptions);
+    } catch (err) {
+        /* handle error by ourself */
+        return err;
+    }
 }
 
 const _downloadM3u8 = async (event: Electron.IpcMainInvokeEvent, inputUrl: string, outputFile: string, downloadOptions: DownloadOptions)=> {
@@ -107,6 +116,7 @@ app.whenReady().then(() => {
      * in order to catch this, override console.error() using electron-log.
      */
     ipcMain.handle('showSaveDialog', _showSaveDialog);
+    ipcMain.handle('checkM3u8Playlist', _checkM3u8Playlist);
     ipcMain.handle('downloadM3u8', _downloadM3u8);
     ipcMain.handle('stopDownloadM3u8', _stopDownloadM3u8);
     ipcMain.handle('getDownloadProgress', _getDownloadProgress);

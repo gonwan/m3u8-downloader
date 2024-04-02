@@ -1,101 +1,135 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import log from 'electron-log/renderer';
+import { DownloadOptions } from '../lib/download';
+import StreamSelectionDialog from '../component/StreamSelectionDialog.vue';
 
 const form = reactive({
-    m3u8Url: '',
-    downloadFilePath: 'D:\\work\\aaa80.mp4',
-    httpHeaders: 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-    httpProxy: '',
-    httpConcurrency: 3,
-    httpTimeout: 10,
-    httpRetries: 3,
-    /* for debugging */
-    preserveFiles: false
+  m3u8Url: '',
+  downloadFilePath: 'D:\\work\\aaa80.mp4',
+  httpHeaders: 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+  httpProxy: '',
+  autoSelectBest: true,
+  httpConcurrency: 3,
+  httpTimeout: 10,
+  httpRetries: 3,
+  /* for debugging */
+  preserveFiles: false
 });
 
+const selectionDialog = ref(null);
 const isDownloading = ref(false);
 const downloadSpeed = ref('');
 const downloadProgress = ref(0);
 
 const formatSize = (size: number) => {
-    if (size < 0) {
-        return 'ERROR';
-    } else if (size >= 1024 * 1024 * 1024) {
-        return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-    } else if (size >= 1024 * 1024) {
-        return `${(size / (1024 * 1024)).toFixed(2)} MB`;
-    } else if (size >= 1024) {
-        return `${(size / (1024)).toFixed(2)} KB`;
-    } else {
-        return `${size} B`;
-    }
+  if (size < 0) {
+    return 'ERROR';
+  } else if (size >= 1024 * 1024 * 1024) {
+    return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  } else if (size >= 1024 * 1024) {
+    return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+  } else if (size >= 1024) {
+    return `${(size / (1024)).toFixed(2)} KB`;
+  } else {
+    return `${size} B`;
+  }
 }
 
 const selectFilePath = async () => {
-    let obj = await window.$electron.showSaveDialog('mp4');
-    if (!obj.canceled) {
-        form.downloadFilePath = obj.filePath;
-    }
+  let obj = await window.$electron.showSaveDialog('mp4');
+  if (!obj.canceled) {
+    form.downloadFilePath = obj.filePath;
+  }
 }
 
 const onGo = async () => {
-    if (form.m3u8Url === '') {
-       await ElMessageBox.alert('Empty m3u8 url!');
-       return;
+  if (form.m3u8Url === '') {
+    await ElMessageBox.alert('Empty m3u8 url!');
+    return;
+  }
+  if (form.downloadFilePath === '') {
+    await ElMessageBox.alert('Empty download file path!');
+    return;
+  }
+  isDownloading.value = true;
+  let headerRecord = new Map();
+  form.httpHeaders.split(/\n/).forEach((value) => {
+    let kv = value.split(':');
+    if (kv.length == 2) {
+      headerRecord.set(kv[0].trim(), kv[1].trim());
     }
-    if (form.downloadFilePath === '') {
-      await ElMessageBox.alert('Empty download file path!');
+  });
+  let downloadOptions: DownloadOptions = {
+    headers: headerRecord,
+    proxy: form.httpProxy,
+    autoSelectBest: form.autoSelectBest,
+    concurrency: form.httpConcurrency,
+    timeout: form.httpTimeout * 1000,
+    retries: form.httpRetries,
+    preserveFiles: form.preserveFiles
+  };
+  /* check playlist */
+  let videoInfo = await window.$electron.checkM3u8Playlist(form.m3u8Url, form.downloadFilePath, downloadOptions);
+  let videoUrl = '';
+  let audioUrl = '';
+  if (typeof videoInfo === 'undefined') {
+    /* input url is video.m3u8 */
+    videoUrl = form.m3u8Url;
+  } else {
+    /* input url is playlist.m3u8 */
+    if (!downloadOptions.autoSelectBest) {
+      videoInfo = await selectionDialog.value.open(videoInfo);
+    }
+    if (videoInfo.video && videoInfo.video.length > 0) {
+      videoUrl = videoInfo.video[0].url;
+    }
+    if (videoInfo.audio && videoInfo.audio.length > 0) {
+      audioUrl = videoInfo.audio[0].url;
+    }
+  }
+  /* download video */
+  let prom;
+  if (videoUrl !== '') {
+    prom = await window.$electron.downloadM3u8(videoUrl, form.downloadFilePath, downloadOptions);
+  }
+  /* download audio */
+  // if (audioUrl !== '') {
+  //   await window.$electron.downloadM3u8(audioUrl, form.downloadFilePath, downloadOptions);
+  // }
+
+  let isCancel = false;
+  let pollingTimer = setInterval(async () => {
+    let progress = await window.$electron.getDownloadProgress();
+    if (!progress.isStop && progress.totalSegs == 0) {
+      /* no progress to update */
       return;
     }
-    isDownloading.value = true;
-    let headerRecord = new Map();
-    form.httpHeaders.split(/\n/).forEach((value) => {
-        let kv = value.split(':');
-        if (kv.length == 2) {
-            headerRecord.set(kv[0].trim(), kv[1].trim());
-        }
-    });
-    let prom = window.$electron.downloadM3u8(form.m3u8Url, form.downloadFilePath, {
-        headers: headerRecord,
-        proxy: form.httpProxy,
-        concurrency: form.httpConcurrency,
-        timeout: form.httpTimeout * 1000,
-        retries: form.httpRetries,
-        preserveFiles: form.preserveFiles
-    });
-    let isCancel = false;
-    let pollingTimer = setInterval(async () => {
-        let progress = await window.$electron.getDownloadProgress();
-        if (!progress.isStop && progress.totalSegs == 0) {
-            /* no progress to update */
-            return;
-        }
-        if (progress.isStop) {
-            clearInterval(pollingTimer);
-            downloadProgress.value = 0;
-            isCancel = true;
-            return;
-        }
-        let percent = progress.transferredSegs / progress.totalSegs;
-        let str = `Downloading ${progress.transferredSegs}/${progress.totalSegs} segs `
-            + `(${formatSize(progress.transferredBytes)}/${formatSize(progress.transferredBytes/percent)} in ${formatSize(progress.speed)}/s)`;
-        log.info(str);
-        downloadProgress.value = Number((percent*100).toFixed(2));
-        downloadSpeed.value = str;
-        if (progress.totalSegs == progress.transferredSegs) {
-            clearInterval(pollingTimer);
-            return;
-        }
-    }, 1000);
-    let res = await prom;
-    if (res instanceof Error) {
-        console.log('err!!', res);
-        downloadSpeed.value = 'Download error!';
-    } else {
-        downloadSpeed.value = isCancel ? 'Download canceled!' : 'Download finished!';
+    if (progress.isStop) {
+      clearInterval(pollingTimer);
+      downloadProgress.value = 0;
+      isCancel = true;
+      return;
     }
-    isDownloading.value = false;
+    let percent = progress.transferredSegs / progress.totalSegs;
+    let str = `Downloading ${progress.transferredSegs}/${progress.totalSegs} segs `
+        + `(${formatSize(progress.transferredBytes)}/${formatSize(progress.transferredBytes/percent)} in ${formatSize(progress.speed)}/s)`;
+    log.info(str);
+    downloadProgress.value = Number((percent*100).toFixed(2));
+    downloadSpeed.value = str;
+    if (progress.totalSegs == progress.transferredSegs) {
+      clearInterval(pollingTimer);
+      return;
+    }
+  }, 1000);
+  let res = await prom;
+  if (res instanceof Error) {
+    console.log('err!!', res);
+    downloadSpeed.value = 'Download error!';
+  } else {
+    downloadSpeed.value = isCancel ? 'Download canceled!' : 'Download finished!';
+  }
+  isDownloading.value = false;
 }
 
 const onCancel = async () => {
@@ -141,16 +175,23 @@ const onCancel = async () => {
         </el-col>
       </el-row>
       <el-row>
-        <el-col :span="12">
-          <el-form-item label="Concurrency">
-            <el-input type="number" min="1" max="10" v-model="form.httpConcurrency" placeholder="download concurrency, default 3" clearable />
+        <el-col :span="6">
+          <el-form-item label="Auto select best">
+            <el-tooltip content="auto select best video/audio stream" placement="top">
+              <el-checkbox v-model="form.autoSelectBest" label="Yes" />
+            </el-tooltip>
           </el-form-item>
         </el-col>
-        <el-col :span="12">
+        <el-col :span="6">
           <el-form-item label="Preserve files">
             <el-tooltip content="preserve files (debugging)" placement="top">
               <el-checkbox v-model="form.preserveFiles" label="Yes" />
             </el-tooltip>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="Concurrency">
+            <el-input type="number" min="1" max="10" v-model="form.httpConcurrency" placeholder="download concurrency, default 3" clearable />
           </el-form-item>
         </el-col>
       </el-row>
@@ -187,6 +228,7 @@ const onCancel = async () => {
     </el-row>
   </el-scrollbar>
   </div>
+  <stream-selection-dialog ref="selectionDialog" />
 </template>
 
 <style scoped>
