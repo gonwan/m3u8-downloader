@@ -49,13 +49,13 @@ const binaryConcat = async (files: string[], outputFile: string, workingDir: str
  * @see https://trac.ffmpeg.org/wiki/Concatenate
  * @see https://www.ffmpeg.org/ffmpeg.html#Stream-selection
  * @param files input files to concat
- * @param files2 another set of input files to concat, can be null
+ * @param files2 another set of input files to concat
  * @param outputFile output file without extension
  * @param workingDir working directory
  * @param format output format
  */
 const ffmpegConcat = async (files: string[], files2: string[], outputFile: string, workingDir: string, format: string) => {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         let hasAudio = files2 && files2.length > 0;
         let protocol = 'concat:' + files.join('|');
         let ff = ffmpeg(
@@ -76,7 +76,7 @@ const ffmpegConcat = async (files: string[], files2: string[], outputFile: strin
                         '-map 0:s?',
                         '-c copy',
                         //'-bsf:a aac_adtstoasc',
-                        '-bsf:v h264_mp4toannexb11'
+                        '-bsf:v h264_mp4toannexb'
                     ])
                     .output(`${outputFile}.mp4`)
                 break;
@@ -87,7 +87,7 @@ const ffmpegConcat = async (files: string[], files2: string[], outputFile: strin
                         '-map 0:s?',
                         '-c copy',
                         //'-bsf:a aac_adtstoasc',
-                        '-bsf:v hevc_mp4toannexb11'
+                        '-bsf:v hevc_mp4toannexb'
                     ])
                     .output(`${outputFile}.mp4`)
                 break;
@@ -132,7 +132,7 @@ const ffmpegConcat = async (files: string[], files2: string[], outputFile: strin
  * @param file file to convert
  */
 const ffmpegConvertToMpegTs = async (file: string) => {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         let ff = ffmpeg({
             logger: console
         });

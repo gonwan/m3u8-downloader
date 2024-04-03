@@ -18,13 +18,16 @@ const form = reactive({
 });
 
 const selectionDialog = ref(null);
-const isDownloading = ref(false);
+const isCancelDownloading = ref(false); /* status management */
+const isDownloading = ref(false); /* ui binding */
 const downloadSpeed = ref('');
 const downloadProgress = ref(0);
 
 const formatSize = (size: number) => {
   if (size < 0) {
-    return 'ERROR';
+    return 'Error';
+  } else if (size == Infinity) {
+    return '??? B';
   } else if (size >= 1024 * 1024 * 1024) {
     return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   } else if (size >= 1024 * 1024) {
@@ -34,6 +37,29 @@ const formatSize = (size: number) => {
   } else {
     return `${size} B`;
   }
+}
+
+const startPollingTimer = (isVideo: boolean) => {
+  let streamType = isVideo ? 'video' : 'audio';
+  let pollingTimer = setInterval(async () => {
+    let progress = await window.$electron.m3u8GetDownloadProgress();
+    if (progress.isStop) {
+      clearInterval(pollingTimer);
+      downloadProgress.value = 0;
+      return;
+    }
+    if (progress.totalSegs == -1) {
+      return;
+    }
+    let percent = (progress.totalSegs == 0) ? 1 : progress.transferredSegs / progress.totalSegs;
+    let str = `Downloading ${streamType}: ${progress.transferredSegs}/${progress.totalSegs} ${streamType} segs `
+        + `(${formatSize(progress.transferredBytes)}/${formatSize(progress.transferredBytes/percent)} @ ${formatSize(progress.speed)}/s)`;
+    downloadProgress.value = Number((percent*100).toFixed(2));
+    downloadSpeed.value = str;
+    if (progress.transferredSegs == progress.totalSegs) {
+      clearInterval(pollingTimer);
+    }
+  }, 1000);
 }
 
 const selectFilePath = async () => {
@@ -53,6 +79,7 @@ const onGo = async () => {
     return;
   }
   isDownloading.value = true;
+  isCancelDownloading.value = false;
   let headerRecord = new Map();
   form.httpHeaders.split(/\n/).forEach((value) => {
     let kv = value.split(':');
@@ -70,7 +97,7 @@ const onGo = async () => {
     preserveFiles: form.preserveFiles
   };
   /* check playlist */
-  let videoInfo = await window.$electron.checkM3u8Playlist(form.m3u8Url, form.downloadFilePath, downloadOptions);
+  let videoInfo = await window.$electron.m3u8CheckPlaylist(form.m3u8Url, form.downloadFilePath, downloadOptions);
   let videoUrl = '';
   let audioUrl = '';
   if (typeof videoInfo === 'undefined') {
@@ -89,51 +116,42 @@ const onGo = async () => {
     }
   }
   /* download video */
-  let prom;
+  let err: Error;
+  let videoPartFiles: string[];
+  let audioPartFiles: string[];
   if (videoUrl !== '') {
-    prom = await window.$electron.downloadM3u8(videoUrl, form.downloadFilePath, downloadOptions);
+    let prom = window.$electron.m3u8Download(videoUrl, form.downloadFilePath, downloadOptions, true);
+    startPollingTimer(true);
+    let res = await prom;
+    if (res instanceof Error) {
+      err = res;
+    } else {
+      videoPartFiles = res;
+    }
   }
   /* download audio */
-  // if (audioUrl !== '') {
-  //   await window.$electron.downloadM3u8(audioUrl, form.downloadFilePath, downloadOptions);
-  // }
-
-  let isCancel = false;
-  let pollingTimer = setInterval(async () => {
-    let progress = await window.$electron.getDownloadProgress();
-    if (!progress.isStop && progress.totalSegs == 0) {
-      /* no progress to update */
-      return;
+  if (!err && !isCancelDownloading.value && audioUrl !== '') {
+    let prom = window.$electron.m3u8Download(audioUrl, form.downloadFilePath, downloadOptions, false);
+    startPollingTimer(true);
+    let res = await prom;
+    if (res instanceof Error) {
+      err = res;
+    } else {
+      audioPartFiles = res;
     }
-    if (progress.isStop) {
-      clearInterval(pollingTimer);
-      downloadProgress.value = 0;
-      isCancel = true;
-      return;
-    }
-    let percent = progress.transferredSegs / progress.totalSegs;
-    let str = `Downloading ${progress.transferredSegs}/${progress.totalSegs} segs `
-        + `(${formatSize(progress.transferredBytes)}/${formatSize(progress.transferredBytes/percent)} in ${formatSize(progress.speed)}/s)`;
-    log.info(str);
-    downloadProgress.value = Number((percent*100).toFixed(2));
-    downloadSpeed.value = str;
-    if (progress.totalSegs == progress.transferredSegs) {
-      clearInterval(pollingTimer);
-      return;
-    }
-  }, 1000);
-  let res = await prom;
-  if (res instanceof Error) {
-    console.log('err!!', res);
+  }
+  if (err) {
+    console.log('err!!', err);
     downloadSpeed.value = 'Download error!';
   } else {
-    downloadSpeed.value = isCancel ? 'Download canceled!' : 'Download finished!';
+    downloadSpeed.value = isCancelDownloading.value ? 'Download canceled!' : 'Download finished!';
   }
   isDownloading.value = false;
 }
 
 const onCancel = async () => {
-    await window.$electron.stopDownloadM3u8();
+  isCancelDownloading.value = true;
+  await window.$electron.m3u8StopDownload();
 }
 
 </script>

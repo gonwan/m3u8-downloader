@@ -4,7 +4,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import log from 'electron-log/main';
 import { ffmpegInit } from '../src/lib/ffmpeg';
-import { checkM3u8Playlist, downloadM3u8, getDownloadProgress, stopDownloadM3u8 } from '../src/lib/m3u8downloader';
+import { m3u8CheckPlaylist, m3u8Download, m3u8GetDownloadProgress, m3u8StopDownload } from '../src/lib/m3u8downloader';
 import { DownloadOptions } from '../src/lib/download';
 import { openLogFolder } from '../src/lib/utils'
 
@@ -46,37 +46,37 @@ process.on("unhandledRejection", (err) => {
 });
 
 const _showSaveDialog = async (event: Electron.IpcMainInvokeEvent, extension: string)=> {
-    let win = BrowserWindow.fromWebContents(event.sender);
+    let win = BrowserWindow.fromWebContents(event.sender)!;
     return dialog.showSaveDialog(win,{
         filters: [{ name: extension, extensions: [ extension ] }],
         properties: ['createDirectory', 'showOverwriteConfirmation']
     });
 }
 
-const _checkM3u8Playlist = async (event: Electron.IpcMainInvokeEvent, inputUrl: string, outputFile: string, downloadOptions: DownloadOptions)=> {
+const _m3u8CheckPlaylist = async (event: Electron.IpcMainInvokeEvent, inputUrl: string, outputFile: string, downloadOptions: DownloadOptions)=> {
     try {
-        return checkM3u8Playlist(inputUrl, outputFile, downloadOptions);
+        return m3u8CheckPlaylist(inputUrl, outputFile, downloadOptions);
     } catch (err) {
         /* handle error by ourself */
         return err;
     }
 }
 
-const _downloadM3u8 = async (event: Electron.IpcMainInvokeEvent, inputUrl: string, outputFile: string, downloadOptions: DownloadOptions)=> {
+const _m3u8Download = async (event: Electron.IpcMainInvokeEvent, inputUrl: string, outputFile: string, downloadOptions: DownloadOptions, isVideo: boolean)=> {
     try {
-        await downloadM3u8(inputUrl, outputFile, downloadOptions);
+        await m3u8Download(inputUrl, outputFile, downloadOptions, isVideo);
     } catch (err) {
         /* handle error by ourself */
         return err;
     }
 }
 
-const _stopDownloadM3u8 = async (event: Electron.IpcMainInvokeEvent) => {
-    return stopDownloadM3u8();
+const _m3u8StopDownload = async (event: Electron.IpcMainInvokeEvent) => {
+    return m3u8StopDownload();
 }
 
-const _getDownloadProgress = async (event: Electron.IpcMainInvokeEvent) => {
-    return getDownloadProgress();
+const _m3u8GetDownloadProgress = async (event: Electron.IpcMainInvokeEvent) => {
+    return m3u8GetDownloadProgress();
 }
 
 const _openLogFolder = async (event: Electron.IpcMainInvokeEvent) => {
@@ -116,10 +116,10 @@ app.whenReady().then(() => {
      * in order to catch this, override console.error() using electron-log.
      */
     ipcMain.handle('showSaveDialog', _showSaveDialog);
-    ipcMain.handle('checkM3u8Playlist', _checkM3u8Playlist);
-    ipcMain.handle('downloadM3u8', _downloadM3u8);
-    ipcMain.handle('stopDownloadM3u8', _stopDownloadM3u8);
-    ipcMain.handle('getDownloadProgress', _getDownloadProgress);
+    ipcMain.handle('m3u8CheckPlaylist', _m3u8CheckPlaylist);
+    ipcMain.handle('m3u8Download', _m3u8Download);
+    ipcMain.handle('m3u8StopDownload', _m3u8StopDownload);
+    ipcMain.handle('m3u8GetDownloadProgress', _m3u8GetDownloadProgress);
     ipcMain.handle('openLogFolder', _openLogFolder);
     createWindow();
     app.on('activate', () => {

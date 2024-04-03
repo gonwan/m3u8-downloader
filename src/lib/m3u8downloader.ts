@@ -10,74 +10,16 @@ import { binaryConcat, ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg";
 
 let downloadProcess: DownloadProgress;
 
-const parseSegments = async(inputUrl: string, ofile: string, downloadManager: DownloadManager, isVideo: boolean) => {
-    let m3u8Buff = await downloadManager.downloadFile(inputUrl);
-    await fs.promises.writeFile(path.join(ofile, `${isVideo ? 'video' : 'audio'}.m3u8`), m3u8Buff);
-    let parser = new Parser();
-    parser.push(m3u8Buff);
-    parser.end();
-    //log.verbose(isVideo ? 'Got video:' : 'Got audio:');
-    //log.verbose(parser.manifest);
-    if (!parser.manifest.segments) {
-        log.error('No segment found');
-    } else {
-        let part = (parser.manifest.discontinuityStarts && parser.manifest.discontinuityStarts.length > 0) ? -1 : 0;
-        let partMap = new Map<number, SegInfo[]>();
-        let keyMap = new Map<string, Buffer>();
-        let hasXMap = false;
-        if (part == 0) {
-            partMap.set(part, []);
-        }
-        for (let i = 0; i < parser.manifest.segments.length; i++) {
-            let seg = parser.manifest.segments[i];
-            if (seg.discontinuity) {
-                part++;
-                partMap.set(part, []);
-            }
-            let dlUrl = url.resolve(inputUrl, seg.uri);
-            log.verbose(`Got seg${i}: ${dlUrl}`);
-            let ptPath = path.join(ofile, isVideo ? 'video' : 'audio', `part${part}`);
-            if (!fs.existsSync(ptPath)) {
-                await fs.promises.mkdir(ptPath, { recursive: true });
-            }
-            if (seg.key) { /* EXT-X-KEY */
-                let keyUrl = url.resolve(inputUrl, seg.key.uri);
-                let key = keyMap.get(keyUrl);
-                if (!key) {
-                    key = await downloadManager.downloadFile(keyUrl);
-                    keyMap.set(keyUrl, key);
-                    log.info(`Got key from: ${keyUrl}`);
-                    log.info(`Got key=${key}, iv=${seg.key.iv} method=${seg.key.method}`);
-                }
-                partMap.get(part)?.push({
-                    idx: i,
-                    dlUrl: dlUrl,
-                    ptPath: ptPath,
-                    length: seg.byterange?.length,
-                    offset: seg.byterange?.offset,
-                    key: key,
-                    keyIV: seg.key.iv,
-                    keyMethod: seg.key.method
-                });
-            } else {
-                partMap.get(part)?.push({idx: i, dlUrl: dlUrl, ptPath: ptPath,
-                    length: seg.byterange?.length, offset: seg.byterange?.offset });
-            }
-            if (seg.map && seg.map.uri) { /* EXT-MAP-KEY */
-                if (!hasXMap) {
-                    let xMapUrl = url.resolve(inputUrl, seg.map.uri);
-                    let xMapBuff = await downloadManager.downloadFile(xMapUrl, seg.map.byterange?.length, seg.map.byterange?.offset);
-                    await fs.promises.writeFile(path.join(ofile, isVideo ? 'video' : 'audio', 'init.mp4'), xMapBuff);
-                    log.info(`Got map file from: ${xMapUrl}`);
-                    hasXMap = true;
-                }
-            }
-        }
-        return partMap;
-    }
-}
-
-const checkM3u8Playlist = async (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions) => {
+/**
+ * Download and parse playlist.m3u8
+ * @param inputUrl
+ * @param outputFile
+ * @param downloadOptions
+ * @return void if it is not a playlist
+ *         one pair of video/audio stream info if auto select best
+ *         all video/audio stream info otherwise
+ */
+const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions) => {
     let dot = outputFile.lastIndexOf('.');
     let ofile = (dot == -1) ? outputFile : outputFile.slice(0, dot);
     if (!fs.existsSync(ofile)) {
@@ -91,8 +33,8 @@ const checkM3u8Playlist = async (inputUrl: string, outputFile: string, downloadO
     if (!parser.manifest.playlists) {
         await fs.promises.writeFile(path.join(ofile, 'video.m3u8'), m3u8Buff);
     } else {
-        log.verbose('Got playlist:');
-        log.verbose(parser.manifest);
+        //log.verbose('Got playlist:');
+        //log.verbose(parser.manifest);
         await fs.promises.writeFile(path.join(ofile, 'playlist.m3u8'), m3u8Buff);
         let videoInfo: VideoInfo = {video: [], audio: []};
         for (let pl of parser.manifest.playlists) {
@@ -123,12 +65,12 @@ const checkM3u8Playlist = async (inputUrl: string, outputFile: string, downloadO
         if (!downloadOptions.autoSelectBest) {
             return videoInfo;
         } else {
-            let bestVideoStream: StreamInfo = null;
-            let bestAudioStream: StreamInfo = null;
+            let bestVideoStream: StreamInfo;
+            let bestAudioStream: StreamInfo;
             let maxVideoWidth = 0;
             if (videoInfo.video) {
                 for (let si of videoInfo.video) {
-                    if (si.resWidth > maxVideoWidth) {
+                    if (si.resWidth && si.resWidth > maxVideoWidth) {
                         bestVideoStream = si;
                     }
                 }
@@ -154,13 +96,82 @@ const checkM3u8Playlist = async (inputUrl: string, outputFile: string, downloadO
     }
 }
 
+const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager: DownloadManager, isVideo: boolean) => {
+    let m3u8Buff = await downloadManager.downloadFile(inputUrl);
+    await fs.promises.writeFile(path.join(ofile, `${isVideo ? 'video' : 'audio'}.m3u8`), m3u8Buff);
+    let parser = new Parser();
+    parser.push(m3u8Buff);
+    parser.end();
+    //log.verbose(isVideo ? 'Got video:' : 'Got audio:');
+    //log.verbose(parser.manifest);
+    if (!parser.manifest.segments) {
+        log.error('No segment found');
+        return new Map<number, SegInfo[]>();
+    } else {
+        let part = (parser.manifest.discontinuityStarts && parser.manifest.discontinuityStarts.length > 0) ? -1 : 0;
+        let partMap = new Map<number, SegInfo[]>();
+        let keyMap = new Map<string, Buffer>();
+        let hasXMap = false;
+        if (part == 0) {
+            partMap.set(part, []);
+        }
+        for (let i = 0; i < parser.manifest.segments.length; i++) {
+            let seg = parser.manifest.segments[i];
+            if (seg.discontinuity) {
+                part++;
+                partMap.set(part, []);
+            }
+            let dlUrl = url.resolve(inputUrl, seg.uri);
+            log.verbose(`Got seg${i}: ${dlUrl}`);
+            let ptPath = path.join(ofile, isVideo ? 'video' : 'audio', `part${part}`);
+            if (!fs.existsSync(ptPath)) {
+                await fs.promises.mkdir(ptPath, { recursive: true });
+            }
+            if (seg.key) { /* EXT-X-KEY */
+                let keyUrl = url.resolve(inputUrl, seg.key.uri);
+                let key = keyMap.get(keyUrl);
+                if (!key) {
+                    log.info(`Getting key from: ${keyUrl}`);
+                    key = await downloadManager.downloadFile(keyUrl);
+                    keyMap.set(keyUrl, key);
+                    log.info(`Got key=${key}, iv=${seg.key.iv} method=${seg.key.method}`);
+                }
+                partMap.get(part)?.push({
+                    idx: i,
+                    dlUrl: dlUrl,
+                    ptPath: ptPath,
+                    length: seg.byterange?.length,
+                    offset: seg.byterange?.offset,
+                    key: key,
+                    keyIV: seg.key.iv,
+                    keyMethod: seg.key.method
+                });
+            } else {
+                partMap.get(part)?.push({idx: i, dlUrl: dlUrl, ptPath: ptPath,
+                    length: seg.byterange?.length, offset: seg.byterange?.offset });
+            }
+            if (seg.map && seg.map.uri) { /* EXT-MAP-KEY */
+                if (!hasXMap) {
+                    let xMapUrl = url.resolve(inputUrl, seg.map.uri);
+                    log.info(`Getting map file from: ${xMapUrl}`);
+                    let xMapBuff = await downloadManager.downloadFile(xMapUrl, seg.map.byterange?.length, seg.map.byterange?.offset);
+                    await fs.promises.writeFile(path.join(ofile, isVideo ? 'video' : 'audio', 'init.mp4'), xMapBuff);
+                    hasXMap = true;
+                }
+            }
+        }
+        return partMap;
+    }
+}
+
 /**
- * Download file from an m3u8 url
- * @param inputUrl
+ * Download segments from an m3u8 url
+ * @param inputUrl a video or audio m3u8 url
  * @param outputFile
  * @param downloadOptions
+ * @param isVideo
  */
-const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions) => {
+const m3u8Download = async (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions, isVideo: boolean) => {
 
     //normal,feifei
     //let inputUrl = 'https://svipsvip.ffzy-online5.com/20240323/25193_10b4631c/index.m3u8';
@@ -171,103 +182,68 @@ const downloadM3u8 = async (inputUrl: string, outputFile: string, downloadOption
     //x-map
     //let inputUrl = 'https://europe.olemovienews.com/hlstimeofffmp4/20210226/fICqcpqr/mp4/fICqcpqr.mp4/master.m3u8';
 
-    log.info(`Downloading: inputUrl=${inputUrl} outputFile=${outputFile} options=${JSON.stringify(downloadOptions)}`);
+    let streamType = isVideo ? 'video' : 'audio';
+    log.info(`Downloading: ${streamType}Url=${inputUrl} outputFile=${outputFile} options=${JSON.stringify(downloadOptions)}`);
     downloadProcess = {
         isStop: false,
-        totalSegs: 0,
+        isVideo: isVideo,
+        totalSegs: -1, /* not filled */
         transferredSegs: 0,
         totalBytes: 0,
         transferredBytes: 0,
         speed: 0
     };
-
     let dot = outputFile.lastIndexOf('.');
     let ofile = (dot == -1) ? outputFile : outputFile.slice(0, dot);
     if (!fs.existsSync(ofile)) {
         await fs.promises.mkdir(ofile, { recursive: true });
     }
+    /* parse */
     let downloadManager = new DownloadManager(downloadOptions);
-    /* playlist */
-    let videoUrl = inputUrl;
-    let audioUrl = '';
-    let videoCodec = 'h264';
-    let audioCodec = 'aac';
-    /* download video & audio segments */
     let segs: SegInfo[] = [];
-    let videoPartMap;
-    if (videoUrl) {
-        videoPartMap = await parseSegments(videoUrl, ofile, downloadManager, true);
-        if (videoPartMap) {
-            let c = 0;
-            for (let [_, v] of videoPartMap) {
-                for (let seg of v) {
-                    segs.push(seg);
-                    c++;
-                }
-            }
-            log.info(`Found ${c} video segments in ${videoPartMap.size} parts`);
+    let partMap = await m3u8ParseSegments(inputUrl, ofile, downloadManager, isVideo);
+    if (!partMap || partMap.size == 0) {
+        return [];
+    }
+    let c = 0;
+    for (let [_, v] of partMap) {
+        for (let seg of v) {
+            segs.push(seg);
+            c++;
         }
     }
-    let audioPartMap;
-    if (audioUrl) {
-        audioPartMap = await parseSegments(audioUrl, ofile, downloadManager, false);
-        if (audioPartMap) {
-            let c = 0;
-            for (let [_, v] of audioPartMap) {
-                for (let seg of v) {
-                    segs.push(seg);
-                    c++;
-                }
-            }
-            log.info(`Found ${c} audio segments in ${audioPartMap.size} parts`);
-        }
-    }
+    log.info(`Found ${c} ${streamType} segments in ${partMap.size} parts`);
     await downloadManager.downloadSegments(segs, downloadProcess);
     /* now merge parts */
-    if (!downloadProcess.isStop) {
-        let videoPartFiles = [];
-        let audioPartFiles = [];
-        if (videoPartMap) {
-            let hasXMap = fs.existsSync(path.join(ofile, 'video', 'init.mp4'));
-            for (let [k, v] of videoPartMap) {
-                if (v && v.length > 0) {
-                    let ptPath = v[0].ptPath;
-                    let tsFiles = hasXMap ? [path.join('..', 'init.mp4')] : [];
-                    v.forEach((seg) => tsFiles.push(`${seg.idx}.ts`));
-                    //await binaryConcat(tsFiles, ptPath, ptPath);
-                    await ffmpegConcat(tsFiles, null, ptPath, ptPath, 'mpegts');
-                    videoPartFiles.push(path.join('video', `part${k}.ts`));
-                }
-            }
+    let partFiles = [];
+    let hasXMap = fs.existsSync(path.join(ofile, streamType, 'init.mp4'));
+    for (let [k, v] of partMap) {
+        if (v && v.length > 0) {
+            let ptPath = v[0].ptPath;
+            let tsFiles = hasXMap ? [path.join('..', 'init.mp4')] : [];
+            v.forEach((seg) => tsFiles.push(`${seg.idx}.ts`));
+            //await binaryConcat(tsFiles, ptPath, ptPath);
+            await ffmpegConcat(tsFiles, [], ptPath, ptPath, 'mpegts');
+            partFiles.push(path.join(streamType, `part${k}.ts`));
         }
-        if (audioPartMap) {
-            let hasXMap = fs.existsSync(path.join(ofile, 'audio', 'init.mp4'));
-            for (let [k, v] of audioPartMap) {
-                if (v && v.length > 0) {
-                    let ptPath = v[0].ptPath;
-                    let tsFiles = hasXMap ? [path.join('..', 'init.mp4')] : [];
-                    v.forEach((seg) => tsFiles.push(`${seg.idx}.ts`));
-                    //await binaryConcat(tsFiles, ptPath, ptPath);
-                    await ffmpegConcat(tsFiles, null, ptPath, ptPath, 'mpegts');
-                    audioPartFiles.push(path.join('audio', `part${k}.ts`));
-                }
-            }
-        }
-        await ffmpegConcat(videoPartFiles, audioPartFiles, ofile, ofile, videoCodec);
     }
+    return partFiles;
+
+//        await ffmpegConcat(videoPartFiles, audioPartFiles, ofile, ofile, videoCodec);
+    //}
     /* clean up */
-    if (!downloadOptions.preserveFiles) {
-        await fs.promises.rm(ofile, { force: true, recursive: true });
-    }
+    // if (!downloadOptions.preserveFiles) {
+    //     await fs.promises.rm(ofile, { force: true, recursive: true });
+    // }
 }
 
-const stopDownloadM3u8 = () => {
+const m3u8StopDownload = () => {
     log.info('Stopping download');
     downloadProcess.isStop = true;
 }
 
-const getDownloadProgress = () => {
+const m3u8GetDownloadProgress = () => {
     return downloadProcess;
 }
 
-export { checkM3u8Playlist, downloadM3u8, stopDownloadM3u8, getDownloadProgress };
+export { m3u8CheckPlaylist, m3u8Download, m3u8StopDownload, m3u8GetDownloadProgress };

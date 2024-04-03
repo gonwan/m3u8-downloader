@@ -20,11 +20,11 @@ type SegInfo = {
 type StreamInfo = {
     resWidth?: number;
     resHeight?: number;
-    bandwidth: number;
+    bandwidth?: number;
     url: string;
     codecs?: string,
     audioGroup?: string, /* video */
-    subtitleGroup?: string /* video */
+    subtitlesGroup?: string /* video */
     name?: string, /* audio/subtitle */
     language?: string /* audio/subtitle */
 };
