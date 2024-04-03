@@ -65,12 +65,13 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
         if (!downloadOptions.autoSelectBest) {
             return videoInfo;
         } else {
-            let bestVideoStream: StreamInfo;
-            let bestAudioStream: StreamInfo;
+            let bestVideoStream;
+            let bestAudioStream;
             let maxVideoWidth = 0;
             if (videoInfo.video) {
                 for (let si of videoInfo.video) {
                     if (si.resWidth && si.resWidth > maxVideoWidth) {
+                        maxVideoWidth = si.resWidth;
                         bestVideoStream = si;
                     }
                 }
@@ -78,7 +79,7 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
             if (bestVideoStream && videoInfo.audio) {
                 for (let si of videoInfo.audio) {
                     if (si.audioGroup === bestVideoStream.audioGroup || bestVideoStream.audioGroup === '') {
-                        if (bestAudioStream == null || si.language === 'en' || si.language === 'en-US') {
+                        if (!bestAudioStream || si.language === 'en' || si.language === 'en-US') {
                             bestAudioStream = si;
                         }
                     }
@@ -186,7 +187,6 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
     log.info(`Downloading: ${streamType}Url=${inputUrl} outputFile=${outputFile} options=${JSON.stringify(downloadOptions)}`);
     downloadProcess = {
         isStop: false,
-        isVideo: isVideo,
         totalSegs: -1, /* not filled */
         transferredSegs: 0,
         totalBytes: 0,
