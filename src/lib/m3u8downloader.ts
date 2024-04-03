@@ -228,13 +228,6 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
         }
     }
     return partFiles;
-
-//        await ffmpegConcat(videoPartFiles, audioPartFiles, ofile, ofile, videoCodec);
-    //}
-    /* clean up */
-    // if (!downloadOptions.preserveFiles) {
-    //     await fs.promises.rm(ofile, { force: true, recursive: true });
-    // }
 }
 
 const m3u8StopDownload = () => {
@@ -246,4 +239,22 @@ const m3u8GetDownloadProgress = () => {
     return downloadProcess;
 }
 
-export { m3u8CheckPlaylist, m3u8Download, m3u8StopDownload, m3u8GetDownloadProgress };
+const m3u8ConcatStreams = async (videoPartFiles: string[], audioPartFiles: string[], outputFile: string, downloadOptions: DownloadOptions, videoCodecs: string) => {
+    let dot = outputFile.lastIndexOf('.');
+    let ofile = (dot == -1) ? outputFile : outputFile.slice(0, dot);
+    let codec = 'h264';
+    if (videoCodecs) {
+        if (videoCodecs.indexOf('hvc1') != -1) {
+            codec = 'h265';
+        } else {
+            codec = 'h264';
+        }
+    }
+    await ffmpegConcat(videoPartFiles, audioPartFiles, ofile, ofile, codec);
+    /* clean up */
+    if (!downloadOptions.preserveFiles) {
+        await fs.promises.rm(ofile, { force: true, recursive: true });
+    }
+}
+
+export { m3u8CheckPlaylist, m3u8Download, m3u8StopDownload, m3u8GetDownloadProgress, m3u8ConcatStreams };

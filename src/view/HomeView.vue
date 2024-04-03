@@ -99,17 +99,22 @@ const onGo = async () => {
   /* check playlist */
   let videoInfo = await window.$electron.m3u8CheckPlaylist(form.m3u8Url, form.downloadFilePath, downloadOptions);
   let videoUrl = '';
+  let videoCodecs = '';
   let audioUrl = '';
   if (typeof videoInfo === 'undefined') {
     /* input url is video.m3u8 */
     videoUrl = form.m3u8Url;
+  } else if (videoInfo instanceof Error) {
+    // FIXME
   } else {
     /* input url is playlist.m3u8 */
     if (!downloadOptions.autoSelectBest) {
       videoInfo = await selectionDialog.value.open(videoInfo);
+      console.log('Selected: ' + JSON.stringify(videoInfo));
     }
     if (videoInfo.video && videoInfo.video.length > 0) {
       videoUrl = videoInfo.video[0].url;
+      videoCodec = videoInfo.video[0].codecs;
     }
     if (videoInfo.audio && videoInfo.audio.length > 0) {
       audioUrl = videoInfo.audio[0].url;
@@ -132,7 +137,7 @@ const onGo = async () => {
   /* download audio */
   if (!err && !isCancelDownloading.value && audioUrl !== '') {
     let prom = window.$electron.m3u8Download(audioUrl, form.downloadFilePath, downloadOptions, false);
-    startPollingTimer(true);
+    startPollingTimer(false);
     let res = await prom;
     if (res instanceof Error) {
       err = res;
@@ -146,6 +151,8 @@ const onGo = async () => {
   } else {
     downloadSpeed.value = isCancelDownloading.value ? 'Download canceled!' : 'Download finished!';
   }
+  console.log('Final concat..');
+  //await window.$electron.m3u8ConcatStreams(videoPartFiles, audioPartFiles, form.downloadFilePath, downloadOptions, videoCodecs);
   isDownloading.value = false;
 }
 

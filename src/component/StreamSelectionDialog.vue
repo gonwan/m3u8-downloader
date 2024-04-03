@@ -63,7 +63,6 @@ const onOK = () => {
   if (selectedVideoIndex.value != -1) {
     selectedVideoInfo.audio.push(videoInfo.audio[selectedAudioIndex.value]);
   }
-  console.log('Selected: ' + JSON.stringify(selectedVideoInfo));
   resolve(selectedVideoInfo);
   visible.value = false;
 }

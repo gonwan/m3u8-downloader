@@ -52,9 +52,9 @@ const binaryConcat = async (files: string[], outputFile: string, workingDir: str
  * @param files2 another set of input files to concat
  * @param outputFile output file without extension
  * @param workingDir working directory
- * @param format output format
+ * @param codec video/audio codec
  */
-const ffmpegConcat = async (files: string[], files2: string[], outputFile: string, workingDir: string, format: string) => {
+const ffmpegConcat = async (files: string[], files2: string[], outputFile: string, workingDir: string, codec: string) => {
     return new Promise<void>((resolve, reject) => {
         let hasAudio = files2 && files2.length > 0;
         let protocol = 'concat:' + files.join('|');
@@ -68,7 +68,7 @@ const ffmpegConcat = async (files: string[], files2: string[], outputFile: strin
             protocol = 'concat:' + files2.join('|');
             ff = ff.input(protocol);
         }
-        switch (format) {
+        switch (codec) {
             case 'h264':
                 ff = ff.addOptions([
                         '-map 0:v?',
@@ -113,7 +113,7 @@ const ffmpegConcat = async (files: string[], files2: string[], outputFile: strin
         }
         ff
             .on('start', (cmdline) => {
-                log.verbose(`Running ffmepg concat in ${format} format: ${cmdline}`);
+                log.verbose(`Running ffmepg concat in ${codec} codec: ${cmdline}`);
             })
             .on('end', () => {
                 log.info('Ffmpeg concat finished!');
