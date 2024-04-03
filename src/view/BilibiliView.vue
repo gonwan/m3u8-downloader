@@ -9,14 +9,36 @@ const selDialog = ref(null);
 const testInput = ref(null);
 
 const videoInfo : VideoInfo = {
-    video: [
-       { codecs: 'codec1', resWidth: 1920, resHeight: 1080, url: 'http://aaa' },
-       { codecs: 'codec2', resWidth: 720, resHeight: 480, url: 'http://bbb' }
-    ],
-    audio: [
-        { codecs: 'aaa', name: 'English', language: 'en', url: 'http://ccc' },
-        { codecs: 'bbb', name: 'Chinese', language: 'cn', url: 'http://ddd' }
-    ]
+  video: [
+    { codecs: 'codec1', resWidth: 1920, resHeight: 1080, audioGroup: 'aud1', url: 'http://aaa' },
+    { codecs: 'codec2', resWidth: 720, resHeight: 480, audioGroup: 'aud2', url: 'http://bbb' },
+    { codecs: 'codec1', resWidth: 1920, resHeight: 1080, url: 'http://aaa' },
+    { codecs: 'codec2', resWidth: 720, resHeight: 480, url: 'http://bbb' },
+    { codecs: 'codec1', resWidth: 1920, resHeight: 1080, url: 'http://aaa' },
+    { codecs: 'codec2', resWidth: 720, resHeight: 480, url: 'http://bbb' },
+    { codecs: 'codec1', resWidth: 1920, resHeight: 1080, url: 'http://aaa' },
+    { codecs: 'codec2', resWidth: 720, resHeight: 480, url: 'http://bbb' },
+    { codecs: 'codec1', resWidth: 1920, resHeight: 1080, url: 'http://aaa' },
+    { codecs: 'codec2', resWidth: 720, resHeight: 480, url: 'http://bbb' },
+    { codecs: 'codec1', resWidth: 1920, resHeight: 1080, url: 'http://aaa' },
+    { codecs: 'codec2', resWidth: 720, resHeight: 480, url: 'http://bbb' },
+    { codecs: 'codec1', resWidth: 1920, resHeight: 1080, url: 'http://aaa' },
+    { codecs: 'codec2', resWidth: 720, resHeight: 480, url: 'http://bbb' },
+    { codecs: 'codec1', resWidth: 1920, resHeight: 1080, url: 'http://aaa' },
+    { codecs: 'codec2', resWidth: 720, resHeight: 480, url: 'http://bbb' },
+    { codecs: 'codec1', resWidth: 1920, resHeight: 1080, url: 'http://aaa' },
+    { codecs: 'codec2', resWidth: 720, resHeight: 480, url: 'http://bbb' },
+    { codecs: 'codec1', resWidth: 1920, resHeight: 1080, url: 'http://aaa' },
+    { codecs: 'codec2', resWidth: 720, resHeight: 480, url: 'http://bbb' },
+    { codecs: 'codec1', resWidth: 1920, resHeight: 1080, url: 'http://aaa' },
+    { codecs: 'codec2', resWidth: 720, resHeight: 480, url: 'http://bbb' },
+    { codecs: 'codec1', resWidth: 1920, resHeight: 1080, url: 'http://aaa' },
+    { codecs: 'codec2', resWidth: 720, resHeight: 480, url: 'http://bbb' }
+  ],
+  audio: [
+    { codecs: 'aaa', name: 'English', language: 'en', audioGroup: 'aud1', url: 'http://ccc' },
+    { codecs: 'bbb', name: 'Chinese', language: 'cn', audioGroup: 'aud2', url: 'http://ddd' }
+  ]
 };
 
 const setShow = async () => {
