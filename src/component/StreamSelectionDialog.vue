@@ -18,11 +18,15 @@ let reject;
 const autoSelectBestVideo = () => {
   if (videoInfo.video) {
     let maxWidth = 0;
+    let maxBandwidth = 0;
     let bestVideoIndex = 0;
     for (let i = 0; i < videoInfo.video.length; i++) {
       let si = videoInfo.video[i];
       if (si.resWidth && si.resWidth > maxWidth) {
         maxWidth = si.resWidth;
+        bestVideoIndex = i;
+      } else if (si.resWidth === maxWidth && si.bandwidth && si.bandwidth > maxBandwidth) {
+        maxBandwidth = si.bandwidth;
         bestVideoIndex = i;
       }
     }
@@ -36,11 +40,11 @@ const open = async (_videoInfo: VideoInfo): Promise<VideoInfo> => {
   watch (selectedVideoIndex, async (newIndex) => {
     let audioGroup = videoInfo.video[newIndex].audioGroup ?? '';
     if (videoInfo.audio) {
-      let bestAudioIndex = 0;
+      let bestAudioIndex = -1;
       for (let i = 0; i < videoInfo.audio.length; i++) {
         let si = videoInfo.audio[i];
         if (si.audioGroup === audioGroup || audioGroup === '') {
-          if (bestAudioIndex == 0 || si.language === 'en' || si.language === 'en-US') {
+          if (bestAudioIndex == -1 || si.language === 'en' || si.language === 'en-US') {
             bestAudioIndex = i;
           }
         }

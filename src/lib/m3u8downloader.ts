@@ -68,10 +68,14 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
             let bestVideoStream;
             let bestAudioStream;
             let maxVideoWidth = 0;
+            let maxVideoBandwidth = 0;
             if (videoInfo.video) {
                 for (let si of videoInfo.video) {
                     if (si.resWidth && si.resWidth > maxVideoWidth) {
                         maxVideoWidth = si.resWidth;
+                        bestVideoStream = si;
+                    } else if (si.resWidth === maxVideoWidth && si.bandwidth && si.bandwidth > maxVideoBandwidth) {
+                        maxVideoBandwidth = si.bandwidth;
                         bestVideoStream = si;
                     }
                 }
@@ -87,9 +91,11 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
             }
             let bestVideoInfo: VideoInfo = {video: [], audio: []};
             if (bestVideoStream) {
+                log.info(`Selecting video resolution ${bestVideoStream.resWidth}x${bestVideoStream.resHeight}: ${bestAudioStream.url}`);
                 bestVideoInfo.video.push(bestVideoStream);
             }
             if (bestAudioStream) {
+                log.info(`Selecting audio language ${bestAudioStream.language}: ${bestAudioStream.url}`);
                 bestVideoInfo.audio.push(bestAudioStream);
             }
             return bestVideoInfo;
