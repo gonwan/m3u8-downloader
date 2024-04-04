@@ -6,7 +6,7 @@ import StreamSelectionDialog from '../component/StreamSelectionDialog.vue';
 
 const form = reactive({
   m3u8Url: '',
-  downloadFilePath: '',
+  downloadFilePath: localStorage.getItem('md.downloadFilePath') ?? '',
   httpHeaders: 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
   httpProxy: '',
   autoSelectBest: true,
@@ -79,6 +79,7 @@ const onGo = async () => {
     await ElMessageBox.alert('Empty download file path!');
     return;
   }
+  localStorage.setItem('md.downloadFilePath', form.downloadFilePath);
   let downloadFilePath = await window.$electron.checkFileExists(form.downloadFilePath);
   if (downloadFilePath !== form.downloadFilePath) {
     ElMessage({
