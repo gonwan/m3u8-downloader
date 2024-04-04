@@ -193,8 +193,8 @@ const onCancel = async () => {
 </script>
 
 <template>
-  <div>
   <h3>Home</h3>
+  <div><!-- el-scrollbar has height: 100% -->
   <el-scrollbar>
     <el-form :model="form" label-width="auto" max-w-800>
       <el-row>
