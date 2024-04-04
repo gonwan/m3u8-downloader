@@ -108,9 +108,15 @@ const createWindow = () => {
     win.once('ready-to-show', () => {
         win.show();
     });
+    /* simulate local shortcut */
     win.removeMenu();
-    globalShortcut.register('Shift+CommandOrControl+I', () => {
-        win.webContents.openDevTools();
+    win.on('focus', () => {
+        globalShortcut.register('Shift+CommandOrControl+I', () => {
+            win.webContents.openDevTools();
+        });
+    });
+    win.on('blur', () => {
+        globalShortcut.unregister('Shift+CommandOrControl+I');
     });
     if (process.env.VITE_DEV_SERVER_URL) { /* HMR support */
         win.loadURL(process.env.VITE_DEV_SERVER_URL);
