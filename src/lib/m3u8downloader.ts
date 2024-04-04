@@ -91,11 +91,11 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
             }
             let bestVideoInfo: VideoInfo = {video: [], audio: []};
             if (bestVideoStream) {
-                log.info(`Selecting video resolution ${bestVideoStream.resWidth}x${bestVideoStream.resHeight}: ${bestVideoStream.url}`);
+                //log.info(`Selecting video resolution ${bestVideoStream.resWidth}x${bestVideoStream.resHeight}: ${bestVideoStream.url}`);
                 bestVideoInfo.video.push(bestVideoStream);
             }
             if (bestAudioStream) {
-                log.info(`Selecting audio language ${bestAudioStream.language}: ${bestAudioStream.url}`);
+                //log.info(`Selecting audio language ${bestAudioStream.language}: ${bestAudioStream.url}`);
                 bestVideoInfo.audio.push(bestAudioStream);
             }
             return bestVideoInfo;
@@ -240,7 +240,7 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
 
 const m3u8StopDownload = () => {
     log.info('Stopping download');
-    downloadProcess.isStop = true;
+    downloadProcess?.isStop = true;
 }
 
 const m3u8GetDownloadProgress = () => {
@@ -261,7 +261,7 @@ const m3u8ConcatStreams = async (videoPartFiles: string[], audioPartFiles: strin
     await ffmpegConcat(videoPartFiles, audioPartFiles, ofile, workingDir, codec);
     /* clean up */
     if (!downloadOptions.preserveFiles) {
-        await fs.promises.rm(ofile, { force: true, recursive: true });
+        await fs.promises.rm(workingDir, { force: true, recursive: true });
     }
 }
 

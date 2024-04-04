@@ -113,7 +113,7 @@ const onGo = async () => {
     let videoCodecs = '';
     let audioUrl = '';
     if (!videoInfo) {
-      /* input url is video.m3u8 */
+      log.info('Input Url is already a video m3u8');
       videoUrl = form.m3u8Url;
     } else if (videoInfo instanceof Error) {
       err = videoInfo;
@@ -124,11 +124,15 @@ const onGo = async () => {
         videoInfo = await selectionDialog.value?.open(videoInfo)!;
       }
       if (videoInfo.video && videoInfo.video.length > 0) {
-        videoUrl = videoInfo.video[0].url;
-        videoCodecs = videoInfo.video[0].codecs ?? '';
+        let v = videoInfo.video[0];
+        log.info(`${downloadOptions.autoSelectBest ? 'Auto' : 'Manual'} selecting video resolution ${v.resWidth}x${v.resHeight}: ${v.url}`);
+        videoUrl = v.url;
+        videoCodecs = v.codecs ?? '';
       }
       if (videoInfo.audio && videoInfo.audio.length > 0) {
-        audioUrl = videoInfo.audio[0].url;
+        let a = videoInfo.audio[0];
+        log.info(`${downloadOptions.autoSelectBest ? 'Auto' : 'Manual'} selecting audio language ${a.language}: ${a.url}`);
+        audioUrl = a.url;
       }
     }
     /* download video */
