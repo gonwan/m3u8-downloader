@@ -17,7 +17,8 @@ const form = reactive({
   preserveFiles: false
 });
 
-const selectionDialog = ref(null);
+/* see: https://vuejs.org/guide/typescript/composition-api#typing-template-refs */
+const selectionDialog = ref<InstanceType<typeof StreamSelectionDialog> | null>(null);
 const isCancelDownloading = ref(false); /* status management */
 const isDownloading = ref(false); /* ui binding */
 const downloadSpeed = ref('');
@@ -52,7 +53,7 @@ const startPollingTimer = (isVideo: boolean) => {
       return;
     }
     let percent = (progress.totalSegs == 0) ? 1 : progress.transferredSegs / progress.totalSegs;
-    let str = `Downloading ${streamType}: ${progress.transferredSegs}/${progress.totalSegs} ${streamType} segs `
+    let str = `Downloading ${streamType}: ${progress.transferredSegs}/${progress.totalSegs} segs `
         + `(${formatSize(progress.transferredBytes)}/${formatSize(progress.transferredBytes/percent)} @ ${formatSize(progress.speed)}/s)`;
     downloadProgress.value = Number((percent*100).toFixed(2));
     downloadSpeed.value = str;
@@ -109,7 +110,7 @@ const onGo = async () => {
   } else {
     /* input url is playlist.m3u8 */
     if (!downloadOptions.autoSelectBest) {
-      videoInfo = await selectionDialog.value.open(videoInfo);
+      videoInfo = await selectionDialog.value?.open(videoInfo);
       console.log('Selected: ' + JSON.stringify(videoInfo));
     }
     if (videoInfo.video && videoInfo.video.length > 0) {

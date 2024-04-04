@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { VideoInfo } from '../lib/download.ts';
+import { ElInput }  from 'element-plus';
+import { VideoInfo } from '../lib/download';
 import StreamSelectionDialog from '../component/StreamSelectionDialog.vue';
 
-const sel = ref('3');
-const show = ref(false);
-const selDialog = ref(null);
-const testInput = ref(null);
+const selectionDialog = ref<InstanceType<typeof StreamSelectionDialog> | null>(null)
+const input1 = ref<InstanceType<typeof ElInput> | null>(null)
+const input2 = ref<HTMLInputElement | null>(null);
 
 const videoInfo : VideoInfo = {
   video: [
@@ -42,9 +42,11 @@ const videoInfo : VideoInfo = {
 };
 
 const setShow = async () => {
-  testInput.value.focus();
-  testInput.value.value = '3883838383'; // proxied???
-  let res = await selDialog.value.open(videoInfo);
+  input1.value?.focus();
+  let x = input1.value?.input;
+  x!.value = '1234';
+  input2.value!.value = '5678';
+  let res = await selectionDialog.value?.open(videoInfo);
   console.log(res);
 }
 
@@ -53,8 +55,9 @@ const setShow = async () => {
 <template>
   <h3>Bilibili</h3>
   <el-button @click="setShow">Open Dialog</el-button>
-  <stream-selection-dialog ref="selDialog" greetings="kdkdkd" :video-info="videoInfo" />
-  <el-input ref="testInput" />
+  <stream-selection-dialog ref="selectionDialog" />
+  <el-input ref="input1" />
+  <input ref="input2" />
 </template>
 
 <style scoped>

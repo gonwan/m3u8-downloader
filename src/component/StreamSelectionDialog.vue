@@ -12,8 +12,8 @@ const selectedVideoIndex = ref(-1);
 const selectedAudioIndex = ref(-1);
 
 let videoInfo: VideoInfo;
-let resolve; //: (value: VideoInfo) => void;
-let reject;  //:  (reason?: any) => void;
+let resolve;
+let reject;
 
 const autoSelectBestVideo = () => {
   if (videoInfo.video) {
@@ -49,7 +49,7 @@ const open = async (_videoInfo: VideoInfo) => {
     }
   });
   autoSelectBestVideo();
-  return new Promise((_resolve, _reject) => {
+  return new Promise<VideoInfo>((_resolve, _reject) => {
     resolve = _resolve;
     reject = _reject;
   });
@@ -105,7 +105,7 @@ defineExpose({
 </script>
 
 <template>
-  <el-dialog v-model="visible" :show-close="false" width="600">
+  <el-dialog v-model="visible" :show-close="false" width="600" :before-close="()=>{}">
     <div v-if="videoInfo && videoInfo.video && videoInfo.video.length > 0">
       <el-text tag="b">Select video stream</el-text>
       <div mb-2 />
