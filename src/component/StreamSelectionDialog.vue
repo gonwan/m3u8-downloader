@@ -64,7 +64,7 @@ const onOK = () => {
   if (selectedVideoIndex.value != -1) {
     selectedVideoInfo.video.push(videoInfo.video[selectedVideoIndex.value]);
   }
-  if (selectedVideoIndex.value != -1) {
+  if (selectedAudioIndex.value != -1) {
     selectedVideoInfo.audio.push(videoInfo.audio[selectedAudioIndex.value]);
   }
   resolve(selectedVideoInfo);

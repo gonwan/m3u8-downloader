@@ -187,7 +187,7 @@ class DownloadManager {
         }
         await Promise.all(requests.values())
             .catch((err) => {
-                log.info('Download failed: ', err);
+                log.error('Download failed', err);
             });
         /* sleep to get progress updated to 100% */
         await new Promise(r => setTimeout(r, 1000));

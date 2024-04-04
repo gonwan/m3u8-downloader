@@ -141,7 +141,7 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
                     log.info(`Getting key from: ${keyUrl}`);
                     key = await downloadManager.downloadFile(keyUrl);
                     keyMap.set(keyUrl, key);
-                    log.info(`Got key=${key}, iv=${seg.key.iv} method=${seg.key.method}`);
+                    log.info(`Got key=${key} iv=${seg.key.iv} method=${seg.key.method}`);
                 }
                 partMap.get(part)?.push({
                     idx: i,
@@ -222,15 +222,17 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
     await downloadManager.downloadSegments(segs, downloadProcess);
     /* now merge parts */
     let partFiles = [];
-    let hasXMap = fs.existsSync(path.join(ofile, streamType, 'init.mp4'));
-    for (let [k, v] of partMap) {
-        if (v && v.length > 0) {
-            let ptPath = v[0].ptPath;
-            let tsFiles = hasXMap ? [path.join('..', 'init.mp4')] : [];
-            v.forEach((seg) => tsFiles.push(`${seg.idx}.ts`));
-            //await binaryConcat(tsFiles, ptPath, ptPath);
-            await ffmpegConcat(tsFiles, [], ptPath, ptPath, 'mpegts');
-            partFiles.push(path.join(streamType, `part${k}.ts`));
+    if (!downloadProcess.isStop) {
+        let hasXMap = fs.existsSync(path.join(ofile, streamType, 'init.mp4'));
+        for (let [k, v] of partMap) {
+            if (v && v.length > 0) {
+                let ptPath = v[0].ptPath;
+                let tsFiles = hasXMap ? [path.join('..', 'init.mp4')] : [];
+                v.forEach((seg) => tsFiles.push(`${seg.idx}.ts`));
+                //await binaryConcat(tsFiles, ptPath, ptPath);
+                await ffmpegConcat(tsFiles, [], ptPath, ptPath, 'mpegts');
+                partFiles.push(path.join(streamType, `part${k}.ts`));
+            }
         }
     }
     return partFiles;
