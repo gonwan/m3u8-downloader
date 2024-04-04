@@ -22,3 +22,7 @@ const openLogFolder = async () => {
     </el-col>
   </el-row>
 </template>
+
+<style scoped>
+
+</style>

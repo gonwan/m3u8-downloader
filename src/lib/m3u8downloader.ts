@@ -179,16 +179,6 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
  * @param isVideo
  */
 const m3u8Download = async (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions, isVideo: boolean) => {
-
-    //normal,feifei
-    //let inputUrl = 'https://svipsvip.ffzy-online5.com/20240323/25193_10b4631c/index.m3u8';
-    //proxy
-    //let inputUrl = 'https://top.letvlist.com/202403/16/WCsDk21n5w3/video/index.m3u8';
-    //aes,iv,niuniu
-    //let inputUrl = 'https://64.32.20.246/play/QeZBnDge/index.m3u8';
-    //x-map
-    //let inputUrl = 'https://europe.olemovienews.com/hlstimeofffmp4/20210226/fICqcpqr/mp4/fICqcpqr.mp4/master.m3u8';
-
     let streamType = isVideo ? 'video' : 'audio';
     log.info(`Downloading: ${streamType}Url=${inputUrl} outputFile=${outputFile} options=${JSON.stringify(downloadOptions)}`);
     downloadProcess = {
