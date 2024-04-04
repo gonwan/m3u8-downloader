@@ -55,7 +55,7 @@ const _showSaveDialog = async (event: Electron.IpcMainInvokeEvent, extension: st
 
 const _m3u8CheckPlaylist = async (event: Electron.IpcMainInvokeEvent, inputUrl: string, outputFile: string, downloadOptions: DownloadOptions)=> {
     try {
-        return m3u8CheckPlaylist(inputUrl, outputFile, downloadOptions);
+        return await m3u8CheckPlaylist(inputUrl, outputFile, downloadOptions);
     } catch (err) {
         /* handle error by ourself */
         return err;
@@ -64,7 +64,7 @@ const _m3u8CheckPlaylist = async (event: Electron.IpcMainInvokeEvent, inputUrl: 
 
 const _m3u8Download = async (event: Electron.IpcMainInvokeEvent, inputUrl: string, outputFile: string, downloadOptions: DownloadOptions, isVideo: boolean)=> {
     try {
-        return m3u8Download(inputUrl, outputFile, downloadOptions, isVideo);
+        return await m3u8Download(inputUrl, outputFile, downloadOptions, isVideo);
     } catch (err) {
         return err;
     }

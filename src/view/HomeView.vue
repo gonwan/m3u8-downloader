@@ -6,7 +6,7 @@ import StreamSelectionDialog from '../component/StreamSelectionDialog.vue';
 
 const form = reactive({
   m3u8Url: '',
-  downloadFilePath: 'D:\\work\\aaa80.mp4',
+  downloadFilePath: '',
   httpHeaders: 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
   httpProxy: '',
   autoSelectBest: true,
@@ -136,8 +136,8 @@ const onGo = async () => {
       }
     }
     /* download video */
-    let videoPartFiles = [];
-    let audioPartFiles = [];
+    let videoPartFiles: string[] = [];
+    let audioPartFiles: string[] = [];
     if (videoUrl !== '') {
       let prom = window.$electron.m3u8Download(videoUrl, form.downloadFilePath, downloadOptions, true);
       startPollingTimer(true);
