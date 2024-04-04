@@ -240,7 +240,9 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
 
 const m3u8StopDownload = () => {
     log.info('Stopping download');
-    downloadProcess?.isStop = true;
+    if (downloadProcess) {
+        downloadProcess.isStop = true;
+    }
 }
 
 const m3u8GetDownloadProgress = () => {

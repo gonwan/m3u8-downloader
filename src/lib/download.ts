@@ -79,7 +79,8 @@ class DownloadManager {
 
     async downloadFile(url: string, length?: number, offset?: number) {
         let hds = this.options.headers ? new Map(this.options.headers) : new Map;
-        if (length && offset) {
+        /* do not use length && offset, since they can be 0. */
+        if (typeof length != 'undefined' && typeof offset != 'undefined') {
             hds.set('Range', `bytes=${offset}-${offset+length-1}`);
         }
         return got.get(url,
@@ -105,7 +106,8 @@ class DownloadManager {
             return;
         }
         let hds = this.options.headers ? new Map(this.options.headers) : new Map;
-        if (seg.length && seg.offset) {
+        /* do not use length && offset, since they can be 0. */
+        if (typeof length != 'undefined' && typeof offset != 'undefined') {
             hds.set('Range', `bytes=${seg.offset}-${seg.offset+seg.length-1}`);
         }
         let buff = await got.get(seg.dlUrl,
