@@ -78,9 +78,9 @@ const _m3u8GetDownloadProgress = async (event: Electron.IpcMainInvokeEvent) => {
     return m3u8GetDownloadProgress();
 }
 
-const _m3u8ConcatStreams = async (event: Electron.IpcMainInvokeEvent, videoPartFiles: string[], audioPartFiles: string[], outputFile: string, downloadOptions: DownloadOptions, videoCodecs: string) => {
+const _m3u8ConcatStreams = async (event: Electron.IpcMainInvokeEvent, videoPartFiles: string[], audioPartFiles: string[], outputFile: string, workingDir: string, downloadOptions: DownloadOptions, videoCodecs: string) => {
     try {
-        await m3u8ConcatStreams(videoPartFiles, audioPartFiles, outputFile, downloadOptions, videoCodecs);
+        await m3u8ConcatStreams(videoPartFiles, audioPartFiles, outputFile, workingDir, downloadOptions, videoCodecs);
     } catch (err) {
         return err;
     }

@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld('$electron', {
     m3u8Download: (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions, isVideo: boolean) => ipcRenderer.invoke('m3u8Download', inputUrl, outputFile, downloadOptions, isVideo),
     m3u8StopDownload: () => ipcRenderer.invoke('m3u8StopDownload'),
     m3u8GetDownloadProgress: () => ipcRenderer.invoke('m3u8GetDownloadProgress'),
-    m3u8ConcatStreams: (videoPartFiles: string[], audioPartFiles: string[], outputFile: string, downloadOptions: DownloadOptions, videoCodecs: string) => ipcRenderer.invoke('m3u8ConcatStreams', videoPartFiles, audioPartFiles, outputFile, downloadOptions, videoCodecs),
+    m3u8ConcatStreams: (videoPartFiles: string[], audioPartFiles: string[], outputFile: string, workingDir: string, downloadOptions: DownloadOptions, videoCodecs: string) => ipcRenderer.invoke('m3u8ConcatStreams', videoPartFiles, audioPartFiles, outputFile, workingDir, downloadOptions, videoCodecs),
     checkFileExists: (filePath: string) => ipcRenderer.invoke('checkFileExists', filePath),
     openLogFolder: () => ipcRenderer.invoke('openLogFolder')
 });

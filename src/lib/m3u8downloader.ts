@@ -247,7 +247,7 @@ const m3u8GetDownloadProgress = () => {
     return downloadProcess;
 }
 
-const m3u8ConcatStreams = async (videoPartFiles: string[], audioPartFiles: string[], outputFile: string, downloadOptions: DownloadOptions, videoCodecs: string) => {
+const m3u8ConcatStreams = async (videoPartFiles: string[], audioPartFiles: string[], outputFile: string, workingDir: string, downloadOptions: DownloadOptions, videoCodecs: string) => {
     let dot = outputFile.lastIndexOf('.');
     let ofile = (dot == -1) ? outputFile : outputFile.slice(0, dot);
     let codec = 'h264';
@@ -258,7 +258,7 @@ const m3u8ConcatStreams = async (videoPartFiles: string[], audioPartFiles: strin
             codec = 'h264';
         }
     }
-    await ffmpegConcat(videoPartFiles, audioPartFiles, ofile, ofile, codec);
+    await ffmpegConcat(videoPartFiles, audioPartFiles, ofile, workingDir, codec);
     /* clean up */
     if (!downloadOptions.preserveFiles) {
         await fs.promises.rm(ofile, { force: true, recursive: true });
