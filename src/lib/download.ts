@@ -107,7 +107,7 @@ class DownloadManager {
         }
         let hds = this.options.headers ? new Map(this.options.headers) : new Map;
         /* do not use length && offset, since they can be 0. */
-        if (typeof length != 'undefined' && typeof offset != 'undefined') {
+        if (typeof seg.length != 'undefined' && typeof seg.offset != 'undefined') {
             hds.set('Range', `bytes=${seg.offset}-${seg.offset+seg.length-1}`);
         }
         let buff = await got.get(seg.dlUrl,

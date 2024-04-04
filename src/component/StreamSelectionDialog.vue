@@ -118,7 +118,7 @@ defineExpose({
         <el-radio-group class="radio-button-v" size="small"  v-model="selectedVideoIndex">
           <div v-for="(v, i) in videoInfo.video">
             <el-radio-button :value='i'>
-              <div min-w="80">{{ formatVideoStreamInfo(v) }}</div>
+              <div min-w="100">{{ formatVideoStreamInfo(v) }}</div>
             </el-radio-button>
           </div>
         </el-radio-group>
@@ -132,15 +132,16 @@ defineExpose({
         <el-radio-group class="radio-button-v" size="small" v-model="selectedAudioIndex">
           <div v-for="(v, i) in videoInfo.audio">
             <el-radio-button :value='i'>
-              <div min-w="80">{{ formatAudioStreamInfo(v) }}</div>
+              <div min-w="100">{{ formatAudioStreamInfo(v) }}</div>
             </el-radio-button>
           </div>
         </el-radio-group>
       </el-scrollbar>
       <div mb-4 />
     </div>
-    <el-button type="primary" @click="onOK">OK</el-button>
-    <div mb-4 />
+    <div mt-6 mb-4>
+      <el-button type="primary" @click="onOK">OK</el-button>
+    </div>
   </el-dialog>
 </template>
 
@@ -148,7 +149,7 @@ defineExpose({
 .radio-button-v {
   display: table;
   margin: 0 auto;
-  text-align: left;
+  text-align: center;
 }
 
 </style>
