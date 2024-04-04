@@ -123,7 +123,7 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
                 partMap.set(part, []);
             }
             let dlUrl = url.resolve(inputUrl, seg.uri);
-            log.verbose(`Got seg${i}: ${dlUrl}`);
+            //log.verbose(`Got seg${i}: ${dlUrl}`);
             let ptPath = path.join(ofile, isVideo ? 'video' : 'audio', `part${part}`);
             if (!fs.existsSync(ptPath)) {
                 await fs.promises.mkdir(ptPath, { recursive: true });

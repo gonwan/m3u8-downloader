@@ -30,7 +30,7 @@ const autoSelectBestVideo = () => {
   }
 }
 
-const open = async (_videoInfo: VideoInfo) => {
+const open = async (_videoInfo: VideoInfo): Promise<VideoInfo> => {
   visible.value = true;
   videoInfo = _videoInfo;
   watch (selectedVideoIndex, async (newIndex) => {
@@ -49,7 +49,7 @@ const open = async (_videoInfo: VideoInfo) => {
     }
   });
   autoSelectBestVideo();
-  return new Promise<VideoInfo>((_resolve, _reject) => {
+  return new Promise((_resolve, _reject) => {
     resolve = _resolve;
     reject = _reject;
   });

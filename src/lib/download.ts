@@ -79,7 +79,7 @@ class DownloadManager {
 
     async downloadFile(url: string, length?: number, offset?: number) {
         let hds = this.options.headers ? new Map(this.options.headers) : new Map;
-        if (typeof length !== 'undefined' && typeof offset !== 'undefined') {
+        if (length && offset) {
             hds.set('Range', `bytes=${offset}-${offset+length-1}`);
         }
         return got.get(url,
@@ -105,7 +105,7 @@ class DownloadManager {
             return;
         }
         let hds = this.options.headers ? new Map(this.options.headers) : new Map;
-        if (typeof seg.length !== 'undefined' && typeof seg.offset !== 'undefined') {
+        if (seg.length && seg.offset) {
             hds.set('Range', `bytes=${seg.offset}-${seg.offset+seg.length-1}`);
         }
         let buff = await got.get(seg.dlUrl,
@@ -171,6 +171,7 @@ class DownloadManager {
             }
             // @ts-ignore
             if (requests.size <= this.options.concurrency) {
+                log.info(`Downloading seg${i}: ${segs[i].dlUrl}`);
                 let p = this.downloadOneSegment(segs[i], abortController.signal, statCallback).then(() => {
                     requests.delete(segs[i].idx);
                     downloadProgress.transferredSegs++;
@@ -196,8 +197,3 @@ class DownloadManager {
 }
 
 export { StreamInfo, VideoInfo, SegInfo, DownloadProgress, DownloadOptions, DownloadManager };
-
-// master.m3u8 --> playlists.json(no use..already selected), raw.m3u8 --> meta.json...
-// catch awaits...
-// index.m3u8 contains multiple sequences???
-

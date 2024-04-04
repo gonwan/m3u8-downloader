@@ -64,9 +64,8 @@ const _m3u8CheckPlaylist = async (event: Electron.IpcMainInvokeEvent, inputUrl: 
 
 const _m3u8Download = async (event: Electron.IpcMainInvokeEvent, inputUrl: string, outputFile: string, downloadOptions: DownloadOptions, isVideo: boolean)=> {
     try {
-        await m3u8Download(inputUrl, outputFile, downloadOptions, isVideo);
+        return m3u8Download(inputUrl, outputFile, downloadOptions, isVideo);
     } catch (err) {
-        /* handle error by ourself */
         return err;
     }
 }
@@ -80,7 +79,11 @@ const _m3u8GetDownloadProgress = async (event: Electron.IpcMainInvokeEvent) => {
 }
 
 const _m3u8ConcatStreams = async (event: Electron.IpcMainInvokeEvent, videoPartFiles: string[], audioPartFiles: string[], outputFile: string, downloadOptions: DownloadOptions, videoCodecs: string) => {
-    return m3u8ConcatStreams(videoPartFiles, audioPartFiles, outputFile, downloadOptions, videoCodecs);
+    try {
+        await m3u8ConcatStreams(videoPartFiles, audioPartFiles, outputFile, downloadOptions, videoCodecs);
+    } catch (err) {
+        return err;
+    }
 }
 
 const _openLogFolder = async (event: Electron.IpcMainInvokeEvent) => {

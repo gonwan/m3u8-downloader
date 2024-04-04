@@ -97,63 +97,76 @@ const onGo = async () => {
     retries: form.httpRetries,
     preserveFiles: form.preserveFiles
   };
+  let err;
   /* check playlist */
-  let videoInfo = await window.$electron.m3u8CheckPlaylist(form.m3u8Url, form.downloadFilePath, downloadOptions);
-  let videoUrl = '';
-  let videoCodecs = '';
-  let audioUrl = '';
-  if (typeof videoInfo === 'undefined') {
-    /* input url is video.m3u8 */
-    videoUrl = form.m3u8Url;
-  } else if (videoInfo instanceof Error) {
-    // FIXME
-  } else {
-    /* input url is playlist.m3u8 */
-    if (!downloadOptions.autoSelectBest) {
-      videoInfo = await selectionDialog.value?.open(videoInfo);
-      console.log('Selected: ' + JSON.stringify(videoInfo));
-    }
-    if (videoInfo.video && videoInfo.video.length > 0) {
-      videoUrl = videoInfo.video[0].url;
-      videoCodec = videoInfo.video[0].codecs;
-    }
-    if (videoInfo.audio && videoInfo.audio.length > 0) {
-      audioUrl = videoInfo.audio[0].url;
-    }
-  }
-  /* download video */
-  let err: Error;
-  let videoPartFiles: string[];
-  let audioPartFiles: string[];
-  if (videoUrl !== '') {
-    let prom = window.$electron.m3u8Download(videoUrl, form.downloadFilePath, downloadOptions, true);
-    startPollingTimer(true);
-    let res = await prom;
-    if (res instanceof Error) {
-      err = res;
+  do {
+    let videoInfo = await window.$electron.m3u8CheckPlaylist(form.m3u8Url, form.downloadFilePath, downloadOptions);
+    let videoUrl = '';
+    let videoCodecs = '';
+    let audioUrl = '';
+    if (!videoInfo) {
+      /* input url is video.m3u8 */
+      videoUrl = form.m3u8Url;
+    } else if (videoInfo instanceof Error) {
+      err = videoInfo;
+      break;
     } else {
-      videoPartFiles = res;
+      /* input url is playlist.m3u8 */
+      if (!downloadOptions.autoSelectBest) {
+        videoInfo = await selectionDialog.value?.open(videoInfo)!;
+      }
+      if (videoInfo.video && videoInfo.video.length > 0) {
+        videoUrl = videoInfo.video[0].url;
+        videoCodecs = videoInfo.video[0].codecs ?? '';
+      }
+      if (videoInfo.audio && videoInfo.audio.length > 0) {
+        audioUrl = videoInfo.audio[0].url;
+      }
     }
-  }
-  /* download audio */
-  if (!err && !isCancelDownloading.value && audioUrl !== '') {
-    let prom = window.$electron.m3u8Download(audioUrl, form.downloadFilePath, downloadOptions, false);
-    startPollingTimer(false);
-    let res = await prom;
-    if (res instanceof Error) {
-      err = res;
-    } else {
-      audioPartFiles = res;
+    /* download video */
+    let videoPartFiles = [];
+    let audioPartFiles = [];
+    if (videoUrl !== '') {
+      let prom = window.$electron.m3u8Download(videoUrl, form.downloadFilePath, downloadOptions, true);
+      startPollingTimer(true);
+      let res = await prom;
+      if (res instanceof Error) {
+        err = res;
+        break;
+      } else {
+        videoPartFiles = res;
+      }
     }
-  }
+    /* download audio */
+    if (!isCancelDownloading.value && audioUrl !== '') {
+      let prom = window.$electron.m3u8Download(audioUrl, form.downloadFilePath, downloadOptions, false);
+      startPollingTimer(false);
+      let res = await prom;
+      if (res instanceof Error) {
+        err = res;
+        break;
+      } else {
+        audioPartFiles = res;
+      }
+    }
+    /* concat all */
+    if (!isCancelDownloading.value && videoPartFiles.length > 0) {
+      downloadSpeed.value = 'Running ffmpeg concat...';
+      let res = await window.$electron.m3u8ConcatStreams(videoPartFiles, audioPartFiles ?? [], form.downloadFilePath, downloadOptions, videoCodecs);
+      if (res instanceof Error) {
+        err = res;
+        break;
+      }
+    }
+  } while (0);
   if (err) {
-    console.log('err!!', err);
+    log.error('Download error', err);
     downloadSpeed.value = 'Download error!';
+    await ElMessageBox.alert(err.message, 'Error');
   } else {
+    log.info(isCancelDownloading.value ? 'Download canceled!' : 'Download finished!');
     downloadSpeed.value = isCancelDownloading.value ? 'Download canceled!' : 'Download finished!';
   }
-  console.log('Final concat..');
-  //await window.$electron.m3u8ConcatStreams(videoPartFiles, audioPartFiles, form.downloadFilePath, downloadOptions, videoCodecs);
   isDownloading.value = false;
 }
 
