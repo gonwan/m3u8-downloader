@@ -91,7 +91,7 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
             }
             let bestVideoInfo: VideoInfo = {video: [], audio: []};
             if (bestVideoStream) {
-                log.info(`Selecting video resolution ${bestVideoStream.resWidth}x${bestVideoStream.resHeight}: ${bestAudioStream.url}`);
+                log.info(`Selecting video resolution ${bestVideoStream.resWidth}x${bestVideoStream.resHeight}: ${bestVideoStream.url}`);
                 bestVideoInfo.video.push(bestVideoStream);
             }
             if (bestAudioStream) {

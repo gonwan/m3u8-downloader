@@ -79,6 +79,14 @@ const onGo = async () => {
     await ElMessageBox.alert('Empty download file path!');
     return;
   }
+  let downloadFilePath = await window.$electron.checkFileExists(form.downloadFilePath);
+  if (downloadFilePath !== form.downloadFilePath) {
+    ElMessage({
+      type: 'warning',
+      dangerouslyUseHTMLString: true,
+      message: `File exists, rename to:<br/>${downloadFilePath}`
+    })
+  }
   isDownloading.value = true;
   isCancelDownloading.value = false;
   let headerRecord = new Map();
@@ -100,7 +108,7 @@ const onGo = async () => {
   let err;
   /* check playlist */
   do {
-    let videoInfo = await window.$electron.m3u8CheckPlaylist(form.m3u8Url, form.downloadFilePath, downloadOptions);
+    let videoInfo = await window.$electron.m3u8CheckPlaylist(form.m3u8Url, downloadFilePath, downloadOptions);
     let videoUrl = '';
     let videoCodecs = '';
     let audioUrl = '';
@@ -127,7 +135,7 @@ const onGo = async () => {
     let videoPartFiles = [];
     let audioPartFiles = [];
     if (videoUrl !== '') {
-      let prom = window.$electron.m3u8Download(videoUrl, form.downloadFilePath, downloadOptions, true);
+      let prom = window.$electron.m3u8Download(videoUrl, downloadFilePath, downloadOptions, true);
       startPollingTimer(true);
       let res = await prom;
       if (res instanceof Error) {
@@ -139,7 +147,7 @@ const onGo = async () => {
     }
     /* download audio */
     if (!isCancelDownloading.value && audioUrl !== '') {
-      let prom = window.$electron.m3u8Download(audioUrl, form.downloadFilePath, downloadOptions, false);
+      let prom = window.$electron.m3u8Download(audioUrl, downloadFilePath, downloadOptions, false);
       startPollingTimer(false);
       let res = await prom;
       if (res instanceof Error) {
@@ -152,7 +160,7 @@ const onGo = async () => {
     /* concat all */
     if (!isCancelDownloading.value && videoPartFiles.length > 0) {
       downloadSpeed.value = 'Running ffmpeg concat...';
-      let res = await window.$electron.m3u8ConcatStreams(videoPartFiles, audioPartFiles ?? [], form.downloadFilePath, downloadOptions, videoCodecs);
+      let res = await window.$electron.m3u8ConcatStreams(videoPartFiles, audioPartFiles ?? [], downloadFilePath, downloadOptions, videoCodecs);
       if (res instanceof Error) {
         err = res;
         break;

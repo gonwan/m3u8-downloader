@@ -6,7 +6,7 @@ import log from 'electron-log/main';
 import { ffmpegInit } from '../src/lib/ffmpeg';
 import { m3u8CheckPlaylist, m3u8Download, m3u8GetDownloadProgress, m3u8StopDownload, m3u8ConcatStreams } from '../src/lib/m3u8downloader';
 import { DownloadOptions } from '../src/lib/download';
-import { openLogFolder } from '../src/lib/utils'
+import { checkFileExists, openLogFolder } from '../src/lib/utils'
 
 log.transports.console.level = 'verbose';
 log.transports.file.level = 'verbose';
@@ -86,6 +86,10 @@ const _m3u8ConcatStreams = async (event: Electron.IpcMainInvokeEvent, videoPartF
     }
 }
 
+const _checkFileExists = async (event: Electron.IpcMainInvokeEvent, filePath: string) => {
+    return checkFileExists(filePath);
+}
+
 const _openLogFolder = async (event: Electron.IpcMainInvokeEvent) => {
     return openLogFolder();
 }
@@ -128,6 +132,7 @@ app.whenReady().then(() => {
     ipcMain.handle('m3u8StopDownload', _m3u8StopDownload);
     ipcMain.handle('m3u8GetDownloadProgress', _m3u8GetDownloadProgress);
     ipcMain.handle('m3u8ConcatStreams', _m3u8ConcatStreams);
+    ipcMain.handle('checkFileExists', _checkFileExists);
     ipcMain.handle('openLogFolder', _openLogFolder);
     createWindow();
     app.on('activate', () => {
