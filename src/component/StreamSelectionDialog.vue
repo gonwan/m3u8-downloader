@@ -115,7 +115,7 @@ defineExpose({
       <div mb-2 />
       <el-scrollbar max-height="180">
         <!-- see: https://github.com/ElemeFE/element/issues/3037 -->
-        <el-radio-group class="radio-button-v" size="small"  v-model="selectedVideoIndex">
+        <el-radio-group class="radio-button-v" size="small" v-model="selectedVideoIndex">
           <div v-for="(v, i) in videoInfo.video">
             <el-radio-button :value='i'>
               <div min-w="100">{{ formatVideoStreamInfo(v) }}</div>
