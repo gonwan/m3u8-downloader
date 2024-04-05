@@ -24,6 +24,7 @@ jobs:
           name: m3u8downloader-v${{ env.APP_VERSION }}-win32-x64.zip
           path: release/m3u8downloader-v${{ env.APP_VERSION }}-win32-x64.zip
         env:
+          GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-mac-x64:
@@ -44,6 +45,7 @@ jobs:
           name: m3u8downloader-v${{ env.APP_VERSION }}-darwin-x64.dmg
           path: release/m3u8downloader-v${{ env.APP_VERSION }}-darwin-x64.dmg
         env:
+          GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-linux-x64:
@@ -64,4 +66,5 @@ jobs:
           name: m3u8downloader-v${{ env.APP_VERSION }}-linux-x64.tar.gz
           path: release/m3u8downloader-v${{ env.APP_VERSION }}-linux-x64.tar.gz
         env:
+          GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
