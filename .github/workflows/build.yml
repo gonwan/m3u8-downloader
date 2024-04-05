@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-        run: npm install
+      - run: npm install
       - name: Build Windows
         run: npm run build
       - name: Package Windows
@@ -31,7 +31,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-        run: npm install
+      - run: npm install
       - name: Build MacOS
         run: npm run build
       - name: Package MacOS
@@ -50,7 +50,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-        run: npm install
+      - run: npm install
       - name: Build Linux
         run: npm run build
       - name: Package Linux
