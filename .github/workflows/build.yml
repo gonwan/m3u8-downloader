@@ -20,7 +20,7 @@ jobs:
       - name: Package Windows
         run: npm run pack-win
         env:
-          GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Artifact - Windows
         uses: actions/upload-artifact@v4
         with:
@@ -41,7 +41,7 @@ jobs:
       - name: Package MacOS
         run: npm run pack-mac
         env:
-          GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Artifact - MacOS
         uses: actions/upload-artifact@v4
         with:
@@ -62,7 +62,7 @@ jobs:
       - name: Package Linux
         run: npm run pack-linux
         env:
-          GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Artifact - Linux
         uses: actions/upload-artifact@v4
         with:
