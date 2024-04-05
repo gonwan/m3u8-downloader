@@ -17,3 +17,4 @@ Yet another m3u8 downloader built with vue3/vite, element-plus & electron.
   - pre-bundle dependencies to convert them to ESM.
   - transpile typescript to javascript, so that HMR can reflect in the browser.
 - In production environment, rollup is used for bundling for its flexibility. see [here](https://vitejs.dev/guide/why.html#why-not-bundle-with-esbuild).
+- When using Github Actions, electron-builder auto detects CI environment via `GITHUB_ACTIONS` environment variable (via `is-ci` package).
