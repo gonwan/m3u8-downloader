@@ -19,7 +19,7 @@ jobs:
       - name: Package Windows
         run: npm run pack-win
       - name: Upload Artifact - Windows
-        uses: actions/upload-artifact@3
+        uses: actions/upload-artifact@4
         with:
           name: m3u8downloader-v${{ env.APP_VERSION }}-win32-x64.zip
           path: release\m3u8downloader-v${{ env.APP_VERSION }}-win32-x64.zip
@@ -37,7 +37,7 @@ jobs:
       - name: Package MacOS
         run: npm run pack-mac
       - name: Upload Artifact - MacOS
-        uses: actions/upload-artifact@3
+        uses: actions/upload-artifact@4
         with:
           name: m3u8downloader-v${{ env.APP_VERSION }}-darwin-x64.dmg
           path: release\m3u8downloader-v${{ env.APP_VERSION }}-darwin-x64.dmg
@@ -56,7 +56,7 @@ jobs:
       - name: Package Linux
         run: npm run pack-linux
       - name: Upload Artifact - Linux
-        uses: actions/upload-artifact@3
+        uses: actions/upload-artifact@4
         with:
           name: m3u8downloader-v${{ env.APP_VERSION }}-linux-x64.tar.gz
           path: release\m3u8downloader-v${{ env.APP_VERSION }}-linux-x64.tar.gz
