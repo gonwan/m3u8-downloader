@@ -22,7 +22,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: m3u8downloader-v${{ env.APP_VERSION }}-win32-x64.zip
-          path: release\m3u8downloader-v${{ env.APP_VERSION }}-win32-x64.zip
+          path: release/m3u8downloader-v${{ env.APP_VERSION }}-win32-x64.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-mac-x64:
     runs-on: macos-latest
@@ -40,7 +42,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: m3u8downloader-v${{ env.APP_VERSION }}-darwin-x64.dmg
-          path: release\m3u8downloader-v${{ env.APP_VERSION }}-darwin-x64.dmg
+          path: release/m3u8downloader-v${{ env.APP_VERSION }}-darwin-x64.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-linux-x64:
     runs-on: ubuntu-20.04
@@ -58,4 +62,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: m3u8downloader-v${{ env.APP_VERSION }}-linux-x64.tar.gz
-          path: release\m3u8downloader-v${{ env.APP_VERSION }}-linux-x64.tar.gz
+          path: release/m3u8downloader-v${{ env.APP_VERSION }}-linux-x64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
