@@ -4,7 +4,7 @@
   "productName": "M3U8 Downloader",
   "executableName": "m3u8downloader",
   "directories": {
-    "output": "release/${version}"
+    "output": "release"
   },
   "asar": true,
   "asarUnpack": [

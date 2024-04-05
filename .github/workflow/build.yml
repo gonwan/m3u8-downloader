@@ -1,0 +1,62 @@
+name: Build
+
+on: [ workflow_dispatch ]
+
+env:
+  APP_VERSION: '0.2.0'
+
+jobs:
+  build-win-x64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+        run: npm install
+      - name: Build Windows
+        run: npm run build
+      - name: Package Windows
+        run: npm run pack-win
+      - name: Upload Artifact - Windows
+        uses: actions/upload-artifact@3
+        with:
+          name: m3u8downloader-v${{ env.APP_VERSION }}-win32-x64.zip
+          path: release\m3u8downloader-v${{ env.APP_VERSION }}-win32-x64.zip
+
+  build-mac-x64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+        run: npm install
+      - name: Build MacOS
+        run: npm run build
+      - name: Package MacOS
+        run: npm run pack-mac
+      - name: Upload Artifact - MacOS
+        uses: actions/upload-artifact@3
+        with:
+          name: m3u8downloader-v${{ env.APP_VERSION }}-darwin-x64.dmg
+          path: release\m3u8downloader-v${{ env.APP_VERSION }}-darwin-x64.dmg
+
+  build-linux-x64:
+    runs-on: ubuntu-latest
+    container: ubuntu:20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+        run: npm install
+      - name: Build Linux
+        run: npm run build
+      - name: Package Linux
+        run: npm run pack-linux
+      - name: Upload Artifact - Linux
+        uses: actions/upload-artifact@3
+        with:
+          name: m3u8downloader-v${{ env.APP_VERSION }}-linux-x64.tar.gz
+          path: release\m3u8downloader-v${{ env.APP_VERSION }}-linux-x64.tar.gz
