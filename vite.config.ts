@@ -20,6 +20,7 @@ export default defineConfig({
       main: {
         entry: 'electron/main.ts',
         vite: {
+          publicDir: 'electron/public',
           build: {
             /*
              * Enable sourcemap for debugging

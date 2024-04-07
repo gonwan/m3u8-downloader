@@ -24,6 +24,7 @@
         ]
       }
     ],
+    "icon": "icons/icon256x256.ico",
     "artifactName": "${name}-v${version}-${platform}-${arch}.${ext}"
   },
   "mac": {
@@ -35,6 +36,7 @@
         ]
       }
     ],
+    "icon": "icons/icon256x256.icns",
     "artifactName": "${name}-v${version}-${platform}-${arch}.${ext}"
   },
   "linux": {
@@ -46,6 +48,7 @@
         ]
       }
     ],
+    "icon": "icons/icon256x256.png",
     "artifactName": "${name}-v${version}-${platform}-${arch}.${ext}"
   }
 }
