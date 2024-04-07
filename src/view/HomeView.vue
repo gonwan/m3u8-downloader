@@ -2,7 +2,7 @@
 import { reactive, ref } from 'vue';
 import log from 'electron-log/renderer';
 import { DownloadOptions } from '../lib/download';
-import StreamSelectionDialog from '../component/StreamSelectionDialog.vue';
+import StreamSelectionDialog from '../components/StreamSelectionDialog.vue';
 
 const form = reactive({
   m3u8Url: '',

@@ -102,7 +102,7 @@ const createWindow = () => {
         show: false,
         resizable: true,
         /* set docker icon for linux, windows/macos pick the icon automatically. */
-        icon: (process.platform == 'linux') ? path.join(__dirname, 'icon256x256.png') : undefined,
+        icon: (process.platform === 'linux') ? path.join(__dirname, 'icon256x256.png') : undefined,
         webPreferences: {
             preload: path.join(__dirname, 'preload.mjs')
         }
