@@ -111,8 +111,7 @@ defineExpose({
 <template>
   <el-dialog v-model="visible" :show-close="false" width="600" :before-close="()=>{}">
     <div v-if="videoInfo && videoInfo.video && videoInfo.video.length > 0">
-      <el-text tag="b">Select video stream</el-text>
-      <div mb-2 />
+      <h3 mt-0 mb-0>Select video stream</h3>
       <el-scrollbar max-height="180">
         <!-- see: https://github.com/ElemeFE/element/issues/3037 -->
         <el-radio-group class="radio-button-v" size="small" v-model="selectedVideoIndex">
@@ -123,11 +122,9 @@ defineExpose({
           </div>
         </el-radio-group>
       </el-scrollbar>
-      <div mb-4 />
     </div>
     <div v-if="videoInfo && videoInfo.audio && videoInfo.audio.length > 0">
-      <el-text tag="b">Select audio stream</el-text>
-      <div mb-2 />
+      <h3 mb-0>Select audio stream</h3>
       <el-scrollbar max-height="180">
         <el-radio-group class="radio-button-v" size="small" v-model="selectedAudioIndex">
           <div v-for="(v, i) in videoInfo.audio">
@@ -137,7 +134,6 @@ defineExpose({
           </div>
         </el-radio-group>
       </el-scrollbar>
-      <div mb-4 />
     </div>
     <div mt-6 mb-4>
       <el-button type="primary" @click="onOK">OK</el-button>

@@ -206,12 +206,12 @@ const onCancel = async () => {
         </el-col>
       </el-row>
       <el-row>
-        <el-col :span="21">
+        <el-col :span="22">
             <el-form-item label="Download file path" required>
               <el-input v-model="form.downloadFilePath" placeholder="download file path" clearable />
             </el-form-item>
         </el-col>
-        <el-col :span="3">
+        <el-col :span="2">
           <el-button plain w-full @click="selectFilePath">Select</el-button>
         </el-col>
       </el-row>
