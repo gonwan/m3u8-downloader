@@ -6,19 +6,6 @@ import log from 'electron-log/main';
 
 const require = createRequire(import.meta.url);
 
-const ffmpegInit = () => {
-    //ffmpeg.setFfmpegPath('C:\\Users\\gonwan\\Downloads\\N_m3u8DL-CLI_v3.0.2_with_ffmpeg_and_SimpleG\\ffmpeg.exe')
-    try {
-        /* require works, import does not. */
-        //const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path.replace('app.asar', 'app.asar.unpacked');
-        const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked');
-        ffmpeg.setFfmpegPath(ffmpegPath);
-        log.info(`Using ffmpeg: ${ffmpegPath}`);
-    } catch (err) {
-        log.error('Failed to find ffmpeg', err);
-    }
-}
-
 /**
  * Concat segments of media files, without ffmpeg
  * @param files files to concat
@@ -44,6 +31,19 @@ const binaryConcat = async (files: string[], outputFile: string, workingDir: str
     }
 }
 
+const ffmpegInit = () => {
+    //ffmpeg.setFfmpegPath('C:\\Users\\gonwan\\Downloads\\N_m3u8DL-CLI_v3.0.2_with_ffmpeg_and_SimpleG\\ffmpeg.exe')
+    try {
+        /* require works, import does not. */
+        //const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path.replace('app.asar', 'app.asar.unpacked');
+        const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked');
+        ffmpeg.setFfmpegPath(ffmpegPath);
+        log.info(`Using ffmpeg: ${ffmpegPath}`);
+    } catch (err) {
+        log.error('Failed to find ffmpeg', err);
+    }
+}
+
 /**
  * Concat segments of media files.
  * @see https://trac.ffmpeg.org/wiki/Concatenate
@@ -55,7 +55,7 @@ const binaryConcat = async (files: string[], outputFile: string, workingDir: str
  * @param codec video/audio codec
  */
 const ffmpegConcat = async (files: string[], files2: string[], outputFile: string, workingDir: string, codec: string) => {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<string[][]>((resolve, reject) => {
         let hasAudio = files2 && files2.length > 0;
         let protocol = 'concat:' + files.join('|');
         let ff = ffmpeg(
@@ -111,17 +111,23 @@ const ffmpegConcat = async (files: string[], files2: string[], outputFile: strin
             default:
                 break;
         }
+        let videoDetails: string[] = [];
+        let audioDetails: string[] = [];
         ff
             .on('start', (cmdline) => {
                 log.verbose(`Running ffmepg concat in ${codec} codec: ${cmdline}`);
             })
             .on('end', () => {
                 log.info('Ffmpeg concat finished!');
-                resolve();
+                resolve([ videoDetails, audioDetails ]);
             })
             .on('error', (err) => {
                 log.error('Ffmpeg concat failed!');
                 reject(err);
+            })
+            .on('codecData', (data) => {
+                videoDetails = data.video_details ?? [];
+                audioDetails = data.audio_details ?? [];
             })
             .run();
     });

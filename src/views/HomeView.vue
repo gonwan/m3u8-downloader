@@ -140,7 +140,7 @@ const onGo = async () => {
     let videoPartFiles: string[] = [];
     let audioPartFiles: string[] = [];
     if (videoUrl !== '') {
-      let prom = window.$electron.m3u8Download(videoUrl, form.downloadFilePath, downloadOptions, true);
+      let prom = window.$electron.m3u8Download(videoUrl, form.downloadFilePath, downloadOptions, true, true);
       startPollingTimer(true);
       let res = await prom;
       if (res instanceof Error) {
@@ -152,7 +152,7 @@ const onGo = async () => {
     }
     /* download audio */
     if (!isCancelDownloading.value && audioUrl !== '') {
-      let prom = window.$electron.m3u8Download(audioUrl, form.downloadFilePath, downloadOptions, false);
+      let prom = window.$electron.m3u8Download(audioUrl, form.downloadFilePath, downloadOptions, false, false);
       startPollingTimer(false);
       let res = await prom;
       if (res instanceof Error) {

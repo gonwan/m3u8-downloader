@@ -177,8 +177,9 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
  * @param outputFile
  * @param downloadOptions
  * @param isVideo
+ * @param removeAds
  */
-const m3u8Download = async (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions, isVideo: boolean) => {
+const m3u8Download = async (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions, isVideo: boolean, removeAds: boolean) => {
     let streamType = isVideo ? 'video' : 'audio';
     log.info(`Downloading: ${streamType}Url=${inputUrl} outputFile=${outputFile} options=${JSON.stringify(downloadOptions)}`);
     downloadProcess = {
@@ -212,6 +213,7 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
     await downloadManager.downloadSegments(segs, downloadProcess);
     /* now merge parts */
     let partFiles = [];
+    let partFilesMap = new Map<string, number[]>();
     if (!downloadProcess.isStop) {
         let hasXMap = fs.existsSync(path.join(ofile, streamType, 'init.mp4'));
         for (let [k, v] of partMap) {
@@ -220,8 +222,43 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
                 let tsFiles = hasXMap ? [path.join('..', 'init.mp4')] : [];
                 v.forEach((seg) => tsFiles.push(`${seg.idx}.ts`));
                 //await binaryConcat(tsFiles, ptPath, ptPath);
-                await ffmpegConcat(tsFiles, [], ptPath, ptPath, 'mpegts');
-                partFiles.push(path.join(streamType, `part${k}.ts`));
+                let [videoDetails, _] = await ffmpegConcat(tsFiles, [], ptPath, ptPath, 'mpegts');
+                let videoRes = 'DUMMY_VIDEO_RES';
+                if (removeAds && isVideo && videoDetails) {
+                    /*
+                     * h264 (High) ([27][0][0][0] / 0x001B),yuv420p(progressive),1080x606 [SAR 404:405 DAR 16:9],23.98 fps,23.98 tbr,90k tbn
+                     * aac (LC) ([15][0][0][0] / 0x000F),44100 Hz,stereo,fltp,66 kb/s
+                     */
+                    videoRes = videoDetails[2]?.trim();
+                }
+                let parts = partFilesMap.get(videoRes);
+                if (!parts) {
+                    partFilesMap.set(videoRes, [k]);
+                } else {
+                    parts.push(k);
+                }
+            }
+        }
+        if (partFilesMap.size > 0) {
+            let maxPartRes = '';
+            let maxPartFiles: number[] = [];
+            for (let [k, v] of partFilesMap.entries()) {
+                if (v && v.length > maxPartFiles.length) {
+                    maxPartRes = k;
+                    maxPartFiles = v;
+                }
+            }
+            let adsFileParts = [];
+            for (let [k, v] of partFilesMap.entries()) {
+                if (k !== maxPartRes) {
+                    adsFileParts.push(v);
+                }
+            }
+            if (adsFileParts.length > 0) {
+                log.info(`Removing ads parts: ${adsFileParts}`);
+            }
+            for (let i of maxPartFiles) {
+                partFiles.push(path.join(streamType, `part${i}.ts`));
             }
         }
     }
@@ -242,6 +279,10 @@ const m3u8GetDownloadProgress = () => {
 const m3u8ConcatStreams = async (videoPartFiles: string[], audioPartFiles: string[], outputFile: string, workingDir: string, downloadOptions: DownloadOptions, videoCodecs: string) => {
     let dot = outputFile.lastIndexOf('.');
     let ofile = (dot == -1) ? outputFile : outputFile.slice(0, dot);
+    if (!audioPartFiles || audioPartFiles.length == 0) {
+        /* try to remove ads */
+         //await ffmpegProbe(videoPartFiles, workingDir);
+    }
     let codec = 'h264';
     if (videoCodecs) {
         if (videoCodecs.indexOf('hvc1') != -1) {

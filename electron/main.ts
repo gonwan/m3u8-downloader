@@ -62,9 +62,9 @@ const _m3u8CheckPlaylist = async (event: Electron.IpcMainInvokeEvent, inputUrl: 
     }
 }
 
-const _m3u8Download = async (event: Electron.IpcMainInvokeEvent, inputUrl: string, outputFile: string, downloadOptions: DownloadOptions, isVideo: boolean)=> {
+const _m3u8Download = async (event: Electron.IpcMainInvokeEvent, inputUrl: string, outputFile: string, downloadOptions: DownloadOptions, isVideo: boolean, removeAds: boolean)=> {
     try {
-        return await m3u8Download(inputUrl, outputFile, downloadOptions, isVideo);
+        return await m3u8Download(inputUrl, outputFile, downloadOptions, isVideo, removeAds);
     } catch (err) {
         return err;
     }
