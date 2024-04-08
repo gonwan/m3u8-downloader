@@ -279,10 +279,6 @@ const m3u8GetDownloadProgress = () => {
 const m3u8ConcatStreams = async (videoPartFiles: string[], audioPartFiles: string[], outputFile: string, workingDir: string, downloadOptions: DownloadOptions, videoCodecs: string) => {
     let dot = outputFile.lastIndexOf('.');
     let ofile = (dot == -1) ? outputFile : outputFile.slice(0, dot);
-    if (!audioPartFiles || audioPartFiles.length == 0) {
-        /* try to remove ads */
-         //await ffmpegProbe(videoPartFiles, workingDir);
-    }
     let codec = 'h264';
     if (videoCodecs) {
         if (videoCodecs.indexOf('hvc1') != -1) {
