@@ -11,6 +11,7 @@ Yet another m3u8 downloader built with vue3/vite, element-plus & electron.
 - Http proxy support
 - HLS `X-MAP` support
 - HLS `AES-128` encryption support
+- Automatic Ads removing
 
 #### Dependencies
 - Vite 5+: Node 18+ is required, and CJS Node API is deprecated.
