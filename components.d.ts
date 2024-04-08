@@ -31,5 +31,6 @@ declare module 'vue' {
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    StreamSelectionDialog: typeof import('./src/components/StreamSelectionDialog.vue')['default']
   }
 }
