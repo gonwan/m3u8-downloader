@@ -229,7 +229,7 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
                      * h264 (High) ([27][0][0][0] / 0x001B),yuv420p(progressive),1080x606 [SAR 404:405 DAR 16:9],23.98 fps,23.98 tbr,90k tbn
                      * aac (LC) ([15][0][0][0] / 0x000F),44100 Hz,stereo,fltp,66 kb/s
                      */
-                    videoRes = videoDetails[2]?.trim();
+                    videoRes = `${videoDetails[0]}-${videoDetails[1]}-${videoDetails[2]}-${videoDetails[3]}`;
                 }
                 let parts = partFilesMap.get(videoRes);
                 if (!parts) {
