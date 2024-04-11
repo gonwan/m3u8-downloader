@@ -15,6 +15,9 @@ jobs:
           node-version: 18
           cache: 'npm'
       - run: npm install
+      - name: Get Version
+        id: get-version
+        run: node -p -e "'VERSION='+require('./package.json').version" >> "$GITHUB_OUTPUT"
       - name: Build Windows
         run: npm run build
       - name: Package Windows
@@ -23,6 +26,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Artifact - Windows
         uses: actions/upload-artifact@v4
+        env:
+          APP_VERSION: ${{ steps.get-version.outputs.VERSION }}
         with:
           name: m3u8downloader-v${{ env.APP_VERSION }}-win32-x64.zip
           path: release/m3u8downloader-v${{ env.APP_VERSION }}-win32-x64.zip
@@ -36,6 +41,9 @@ jobs:
           node-version: 18
           cache: 'npm'
       - run: npm install
+      - name: Get Version
+        id: get-version
+        run: node -p -e "'VERSION='+require('./package.json').version" >> "$GITHUB_OUTPUT"
       - name: Build MacOS
         run: npm run build
       - name: Package MacOS
@@ -44,6 +52,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Artifact - MacOS
         uses: actions/upload-artifact@v4
+        env:
+          APP_VERSION: ${{ steps.get-version.outputs.VERSION }}
         with:
           name: m3u8downloader-v${{ env.APP_VERSION }}-darwin-x64.dmg
           path: release/m3u8downloader-v${{ env.APP_VERSION }}-darwin-x64.dmg
@@ -57,6 +67,9 @@ jobs:
           node-version: 18
           cache: 'npm'
       - run: npm install
+      - name: Get Version
+        id: get-version
+        run: node -p -e "'VERSION='+require('./package.json').version" >> "$GITHUB_OUTPUT"
       - name: Build Linux
         run: npm run build
       - name: Package Linux
@@ -65,6 +78,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Artifact - Linux
         uses: actions/upload-artifact@v4
+        env:
+          APP_VERSION: ${{ steps.get-version.outputs.VERSION }}
         with:
           name: m3u8downloader-v${{ env.APP_VERSION }}-linux-x64.tar.gz
           path: release/m3u8downloader-v${{ env.APP_VERSION }}-linux-x64.tar.gz

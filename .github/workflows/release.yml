@@ -16,7 +16,7 @@ jobs:
       - run: npm install
       - name: Get Version
         id: get-version
-        run: node -p -e "console.log('VERSION='+require('./package.json').version)" >> "$GITHUB_OUTPUT"
+        run: node -p -e "'VERSION='+require('./package.json').version" >> "$GITHUB_OUTPUT"
       - name: Build Windows
         run: npm run build
       - name: Package Windows
@@ -46,7 +46,7 @@ jobs:
       - run: npm install
       - name: Get Version
         id: get-version
-        run: node -p -e "console.log('VERSION='+require('./package.json').version)" >> "$GITHUB_OUTPUT"
+        run: node -p -e "'VERSION='+require('./package.json').version" >> "$GITHUB_OUTPUT"
       - name: Build MacOS
         run: npm run build
       - name: Package MacOS
@@ -76,7 +76,7 @@ jobs:
       - run: npm install
       - name: Get Version
         id: get-version
-        run: node -p -e "console.log('VERSION='+require('./package.json').version)" >> "$GITHUB_OUTPUT"
+        run: node -p -e "'VERSION='+require('./package.json').version" >> "$GITHUB_OUTPUT"
       - name: Build Linux
         run: npm run build
       - name: Package Linux
