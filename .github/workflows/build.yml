@@ -2,9 +2,6 @@ name: Build
 
 on: workflow_dispatch
 
-env:
-  APP_VERSION: '0.6.0'
-
 jobs:
   build-win-x64:
     runs-on: windows-2019
