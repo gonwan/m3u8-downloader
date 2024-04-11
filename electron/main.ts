@@ -1,4 +1,4 @@
-import { app, dialog, globalShortcut, ipcMain, BrowserWindow } from 'electron'
+import { app, dialog, globalShortcut, ipcMain, BrowserWindow, Menu } from 'electron'
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -104,14 +104,15 @@ const createWindow = () => {
         /* set docker icon for linux, windows/macos pick the icon automatically. */
         icon: path.join(__dirname, 'icon256x256.png'),
         webPreferences: {
+            spellcheck: false,
             preload: path.join(__dirname, 'preload.mjs')
         }
     });
+    /* avoid visual flash */
     win.once('ready-to-show', () => {
         win.show();
     });
     /* simulate local shortcut */
-    win.removeMenu();
     win.on('focus', () => {
         globalShortcut.register('Shift+CommandOrControl+I', () => {
             win.webContents.openDevTools();
@@ -127,6 +128,7 @@ const createWindow = () => {
     }
 }
 
+Menu.setApplicationMenu(null);
 app.whenReady().then(() => {
     /*
      * ipc errors are reported using console.error(), not throwing: `Error occurred in handler for '${channel}':`

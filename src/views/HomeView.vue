@@ -86,7 +86,7 @@ const onGo = async () => {
       type: 'warning',
       dangerouslyUseHTMLString: true,
       message: `File exists, rename to:<br/>${downloadFilePath}`
-    })
+    });
   }
   isDownloading.value = true;
   isCancelDownloading.value = false;
