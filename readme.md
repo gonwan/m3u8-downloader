@@ -4,7 +4,7 @@ Yet another m3u8 downloader built with vue3/vite, element-plus & electron.
 ![md-1](doc/md-1.png)
 ![md-2](doc/md-2.png)
 
-### Features
+#### Features
 - Video/Audio stream selection
 - Concurrent download support
 - Http headers customization support
