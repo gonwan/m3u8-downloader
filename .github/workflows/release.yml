@@ -16,7 +16,7 @@ jobs:
       - run: npm install
       - name: Get Version
         id: get-version
-        run: node -p -e "'VERSION='+require('./package.json').version" >> "$GITHUB_OUTPUT"
+        run: node -p -e "'VERSION='+require('./package.json').version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
       - name: Build Windows
         run: npm run build
       - name: Package Windows
