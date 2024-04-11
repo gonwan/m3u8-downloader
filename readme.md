@@ -7,8 +7,8 @@ Yet another m3u8 downloader built with vue3/vite, element-plus & electron.
 #### Features
 - Video/Audio stream selection
 - Concurrent download support
-- Http headers customization support
-- Http proxy support
+- HTTP headers customization support
+- HTTP proxy support
 - HLS `X-MAP` support
 - HLS `AES-128` encryption support
 - Automatic Ads removing

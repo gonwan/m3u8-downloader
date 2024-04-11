@@ -1,11 +1,11 @@
 {
   "name": "m3u8downloader",
-  "description": "Yet another m3u8 downloader",
+  "description": "Yet Another M3U8 Downloader",
   "author": "gonwan <gonwan@gmail.com>",
   "license": "Apache-2.0",
   "homepage": "https://github.com/gonwan/m3u8-downloader",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.6.1",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
