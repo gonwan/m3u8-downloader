@@ -92,9 +92,9 @@ const onGo = async () => {
   isCancelDownloading.value = false;
   let headerRecord = new Map();
   form.httpHeaders.split(/\n/).forEach((value) => {
-    let kv = value.split(':');
-    if (kv.length == 2) {
-      headerRecord.set(kv[0].trim(), kv[1].trim());
+    let idx = value.indexOf(':');
+    if (idx != -1) {
+      headerRecord.set(value.slice(0, idx).trim(), value.slice(idx+1).trim());
     }
   });
   let downloadOptions: DownloadOptions = {
