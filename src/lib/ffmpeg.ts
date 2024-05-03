@@ -129,6 +129,9 @@ const ffmpegConcat = async (files: string[], files2: string[], outputFile: strin
                 videoDetails = data.video_details ?? [];
                 audioDetails = data.audio_details ?? [];
             })
+            .on('stderr', (stderrLine) => {
+                log.error(`Ffmpeg stderr: ${stderrLine}`);
+            })
             .run();
     });
 }
@@ -161,6 +164,9 @@ const ffmpegConvertToMpegTs = async (file: string) => {
             .on('error', (err) => {
                 log.error('Conversion to mpegts failed!');
                 reject(err);
+            })
+            .on('stderr', (stderrLine) => {
+                log.error(`Ffmpeg stderr: ${stderrLine}`);
             })
             .run();
     });

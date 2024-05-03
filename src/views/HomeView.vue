@@ -122,7 +122,7 @@ const onGo = async () => {
     } else {
       /* input url is playlist.m3u8 */
       if (!downloadOptions.autoSelectBest) {
-        videoInfo = await selectionDialog.value?.open(videoInfo)!;
+        videoInfo = await selectionDialog.value!.open(videoInfo);
       }
       if (videoInfo.video && videoInfo.video.length > 0) {
         let v = videoInfo.video[0];
