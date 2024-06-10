@@ -150,7 +150,7 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
                     length: seg.byterange?.length,
                     offset: seg.byterange?.offset,
                     key: key,
-                    keyIV: seg.key.iv,
+                    keyIV: seg.key.iv ?? new Uint32Array([0, 0, 0, 0]),
                     keyMethod: seg.key.method
                 });
             } else {
