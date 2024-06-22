@@ -222,7 +222,21 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
                 let tsFiles = hasXMap ? [path.join('..', 'init.mp4')] : [];
                 v.forEach((seg) => tsFiles.push(`${seg.idx}.ts`));
                 //await binaryConcat(tsFiles, ptPath, ptPath);
-                let [videoDetails, _] = await ffmpegConcat(tsFiles, [], ptPath, ptPath, 'mpegts');
+                let videoDetails: string[] = [];
+                if (tsFiles.length <= 1000) {
+                    let [vd, _] = await ffmpegConcat(tsFiles, [], ptPath, ptPath, 'mpegts');
+                    videoDetails = vd;
+                } else {
+                    /* prevent 'too many open files', windows=2048, linux=1024 by default. */
+                    let tsGroups: string[] = [];
+                    for (let i = 0; i*1000 < tsFiles.length; i++) {
+                        tsGroups.push(`group${i}`);
+                        await ffmpegConcat(tsFiles.slice(i*1000, (i+1)*1000), [], tsGroups[tsGroups.length-1], ptPath, 'mpegts');
+                    }
+                    let groupFiles = tsGroups.map((g) => `${g}.ts`);
+                    let [vd, _] = await ffmpegConcat(groupFiles, [], ptPath, ptPath, 'mpegts');
+                    videoDetails = vd;
+                }
                 let videoRes = 'DUMMY_VIDEO_RES';
                 if (removeAds && isVideo && videoDetails) {
                     /*
@@ -297,6 +311,7 @@ const m3u8ConcatStreams = async (videoPartFiles: string[], audioPartFiles: strin
             codec = 'h264';
         }
     }
+//    if (videoPartFiles)
     await ffmpegConcat(videoPartFiles, audioPartFiles, ofile, workingDir, codec);
     /* clean up */
     if (!downloadOptions.preserveFiles) {
