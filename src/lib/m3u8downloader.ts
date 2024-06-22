@@ -8,6 +8,8 @@ import { Parser } from 'm3u8-parser';
 import { StreamInfo, VideoInfo, SegInfo, DownloadProgress, DownloadOptions, DownloadManager } from './download';
 import { binaryConcat, ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg";
 
+const DEFAULT_IV = new Uint32Array([0, 0, 0, 0]);
+
 let downloadProcess: DownloadProgress;
 
 /**
@@ -150,7 +152,7 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
                     length: seg.byterange?.length,
                     offset: seg.byterange?.offset,
                     key: key,
-                    keyIV: seg.key.iv ?? new Uint32Array([0, 0, 0, 0]),
+                    keyIV: seg.key.iv ?? DEFAULT_IV,
                     keyMethod: seg.key.method
                 });
             } else {
