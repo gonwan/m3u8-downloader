@@ -311,7 +311,6 @@ const m3u8ConcatStreams = async (videoPartFiles: string[], audioPartFiles: strin
             codec = 'h264';
         }
     }
-//    if (videoPartFiles)
     await ffmpegConcat(videoPartFiles, audioPartFiles, ofile, workingDir, codec);
     /* clean up */
     if (!downloadOptions.preserveFiles) {
