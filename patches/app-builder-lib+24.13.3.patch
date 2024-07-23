@@ -1,0 +1,13 @@
+diff --git a/node_modules/app-builder-lib/out/winPackager.js b/node_modules/app-builder-lib/out/winPackager.js
+index 80006cd..412356e 100644
+--- a/node_modules/app-builder-lib/out/winPackager.js
++++ b/node_modules/app-builder-lib/out/winPackager.js
+@@ -237,7 +237,7 @@ class WinPackager extends platformPackager_1.PlatformPackager {
+             appInfo.productName,
+             "--set-version-string",
+             "ProductName",
+-            appInfo.productName,
++            appInfo.description || appInfo.productName,  /* https://github.com/electron-userland/electron-builder/pull/8125 */
+             "--set-version-string",
+             "LegalCopyright",
+             appInfo.copyright,

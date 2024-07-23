@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "homepage": "https://github.com/gonwan/m3u8-downloader",
   "private": true,
-  "version": "0.6.4",
+  "version": "0.6.5",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -18,7 +18,7 @@
     "pack-win": "electron-builder --win",
     "pack-mac": "electron-builder --mac",
     "pack-linux": "electron-builder --linux",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "patch-package && electron-builder install-app-deps"
   },
   "dependencies": {
     "@types/fluent-ffmpeg": "^2.1.24",
@@ -37,7 +37,8 @@
     "@iconify-json/ri": "^1.1.20",
     "@vitejs/plugin-vue": "^5.0.4",
     "electron": "^28.3.2",
-    "electron-builder": "^25.0.1",
+    "electron-builder": "^24.13.3",
+    "patch-package": "^8.0.0",
     "tsx": "^4.16.2",
     "typescript": "^5.4.4",
     "unocss": "^0.61.4",
