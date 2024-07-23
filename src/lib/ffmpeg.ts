@@ -35,8 +35,8 @@ const ffmpegInit = () => {
     //ffmpeg.setFfmpegPath('C:\\Users\\gonwan\\Downloads\\N_m3u8DL-CLI_v3.0.2_with_ffmpeg_and_SimpleG\\ffmpeg.exe')
     try {
         /* require works, import does not. */
-        //const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path.replace('app.asar', 'app.asar.unpacked');
-        const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked');
+        const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path.replace('app.asar', 'app.asar.unpacked');
+        //const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked');
         ffmpeg.setFfmpegPath(ffmpegPath);
         log.info(`Using ffmpeg: ${ffmpegPath}`);
     } catch (err) {
