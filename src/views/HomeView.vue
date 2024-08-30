@@ -201,14 +201,14 @@ const onCancel = async () => {
       <el-row>
         <el-col :span="24">
           <el-form-item label="M3u8 Url" required>
-            <el-input v-model="form.m3u8Url" placeholder="m3u8 url: [http|https]://address/to/some.m3u8" clearable />
+            <el-input v-model.trim="form.m3u8Url" placeholder="m3u8 url: [http|https]://address/to/some.m3u8" clearable />
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="22">
             <el-form-item label="Download file path" required>
-              <el-input v-model="form.downloadFilePath" placeholder="download file path" clearable />
+              <el-input v-model.trim="form.downloadFilePath" placeholder="download file path" clearable />
             </el-form-item>
         </el-col>
         <el-col :span="2">
@@ -225,7 +225,7 @@ const onCancel = async () => {
       <el-row>
         <el-col :span="24">
           <el-form-item label="Http proxy">
-            <el-input v-model="form.httpProxy" placeholder="http://127.0.0.1:8080 etc." clearable />
+            <el-input v-model.trim="form.httpProxy" placeholder="http://127.0.0.1:8080 etc." clearable />
           </el-form-item>
         </el-col>
       </el-row>
