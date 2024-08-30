@@ -117,16 +117,13 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
         log.error('No segment found');
         return new Map<number, SegInfo[]>();
     } else {
-        let part = (parser.manifest.discontinuityStarts && parser.manifest.discontinuityStarts.length > 0) ? -1 : 0;
+        let part = -1;
         let partMap = new Map<number, SegInfo[]>();
         let keyMap = new Map<string, Buffer>();
         let hasXMap = false;
-        if (part == 0) {
-            partMap.set(part, []);
-        }
         for (let i = 0; i < parser.manifest.segments.length; i++) {
             let seg = parser.manifest.segments[i];
-            if (seg.discontinuity) {
+            if (seg.discontinuity || i == 0) {
                 part++;
                 partMap.set(part, []);
             }
