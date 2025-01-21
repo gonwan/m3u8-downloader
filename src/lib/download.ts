@@ -77,6 +77,29 @@ class DownloadManager {
         return r;
     }
 
+    /*
+     * Some site appends a png header to the ts files, skip it.
+     * See: https://en.wikipedia.org/wiki/MPEG_transport_stream#Packet
+     */
+    skipToTsHeader(buff: Buffer, idx: number) {
+        let len = (buff.length < 16384) ? buff.length : 16384;
+        let i = 0;
+        for ( ; i < len; i++) {
+            if (buff[i] == 0x47 && buff[i+188] == 0x47 && buff[i+188*2] == 0x47) {
+                break;
+            }
+        }
+        if (i == len) {
+            log.error(`Seg${idx}: Failed to find a valid Ts header`);
+            return Buffer.alloc(0);
+        }
+        if (i > 0) {
+            log.info(`Seg${idx}: Skipped ${i} bytes to find a Ts header`);
+            return buff.subarray(i);
+        }
+        return buff;
+    }
+
     async downloadFile(url: string, length?: number, offset?: number) {
         let hds = this.options.headers ? new Map(this.options.headers) : new Map;
         /* do not use length && offset, since they can be 0. */
@@ -147,6 +170,7 @@ class DownloadManager {
                     break;
             }
         }
+        buff = this.skipToTsHeader(buff, seg.idx);
         await fs.promises.writeFile(outputPath, buff);
     }
 
