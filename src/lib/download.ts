@@ -79,13 +79,13 @@ class DownloadManager {
     }
 
     /*
-     * Some site appends a png header to the ts files, skip it.
+     * Some sites append a png header to the ts files, skip it.
      * See: https://en.wikipedia.org/wiki/MPEG_transport_stream#Packet
      */
     skipToTsHeader(buff: Buffer, idx: number) {
         let len = (buff.length < 16384) ? buff.length : 16384;
         let i = 0;
-        for ( ; i < len; i++) {
+        for ( ; i < len-188*2; i++) {
             if (buff[i] == 0x47 && buff[i+188] == 0x47 && buff[i+188*2] == 0x47) {
                 break;
             }
