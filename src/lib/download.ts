@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import got, { Progress } from 'got';
+import got, { AbortError, Progress } from 'got';
 import log from 'electron-log/main';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
@@ -36,6 +36,7 @@ type VideoInfo = {
 
 type DownloadProgress = {
     isStop: boolean;
+    abortController: AbortController;
     totalSegs: number;
     transferredSegs: number;
     totalBytes: number;
@@ -101,7 +102,7 @@ class DownloadManager {
     }
 
     async downloadFile(url: string, length?: number, offset?: number) {
-        let hds = this.options.headers ? new Map(this.options.headers) : new Map;
+        let hds = this.options.headers ? new Map(this.options.headers) : new Map();
         /* do not use length && offset, since they can be 0. */
         if (typeof length != 'undefined' && typeof offset != 'undefined') {
             hds.set('Range', `bytes=${offset}-${offset+length-1}`);
@@ -128,7 +129,7 @@ class DownloadManager {
         if (fs.existsSync(outputPath)) {
             return;
         }
-        let hds = this.options.headers ? new Map(this.options.headers) : new Map;
+        let hds = this.options.headers ? new Map(this.options.headers) : new Map();
         /* do not use length && offset, since they can be 0. */
         if (typeof seg.length != 'undefined' && typeof seg.offset != 'undefined') {
             hds.set('Range', `bytes=${seg.offset}-${seg.offset+seg.length-1}`);
@@ -190,7 +191,6 @@ class DownloadManager {
             downloadProgress.transferredBytes = current;
             downloadProgress.speed = current - prev;
             }, 1000);
-        const abortController = new AbortController();
         for (let i = 0; i < segs.length; i++) {
             if (downloadProgress.isStop) {
                 break;
@@ -198,22 +198,27 @@ class DownloadManager {
             // @ts-ignore
             if (requests.size <= this.options.concurrency) {
                 log.info(`Downloading seg${i}: ${segs[i].dlUrl}`);
-                let p = this.downloadOneSegment(segs[i], abortController.signal, statCallback).then(() => {
+                let p = this.downloadOneSegment(segs[i], downloadProgress.abortController.signal, statCallback).then(() => {
                     requests.delete(segs[i].idx);
                     downloadProgress.transferredSegs++;
                 });
                 requests.set(segs[i].idx, p);
                 if (requests.size == this.options.concurrency) {
-                    await Promise.any(requests.values());
+                    await Promise.any(requests.values())
+                        .catch((err) => {
+                            log.error('Download failed', err);
+                        });
                 }
             }
         }
-        if (downloadProgress.isStop) {
-            abortController.abort();
-        }
         await Promise.all(requests.values())
             .catch((err) => {
-                log.error('Download failed', err);
+                if (err instanceof AbortError) {
+                    log.info("Download aborted");
+                } else {
+                    log.error('Download failed', err);
+                    throw err;
+                }
             });
         /* sleep to get progress updated to 100% */
         await new Promise(r => setTimeout(r, 1000));

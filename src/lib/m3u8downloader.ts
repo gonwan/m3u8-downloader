@@ -183,6 +183,7 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
     log.info(`Downloading: ${streamType}Url=${inputUrl} outputFile=${outputFile} options=${JSON.stringify(downloadOptions)}`);
     downloadProcess = {
         isStop: false,
+        abortController: new AbortController(),
         totalSegs: -1, /* not filled */
         transferredSegs: 0,
         totalBytes: 0,
@@ -292,6 +293,7 @@ const m3u8StopDownload = () => {
     log.info('Stopping download');
     if (downloadProcess) {
         downloadProcess.isStop = true;
+        downloadProcess.abortController.abort();
     }
 }
 
