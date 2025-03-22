@@ -180,7 +180,15 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
  */
 const m3u8Download = async (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions, isVideo: boolean, removeAds: boolean) => {
     let streamType = isVideo ? 'video' : 'audio';
-    log.info(`Downloading: ${streamType}Url=${inputUrl} outputFile=${outputFile} options=${JSON.stringify(downloadOptions)}`);
+    let optsJson = JSON.stringify(downloadOptions, (key, value) => {
+        if (value instanceof Map) {
+            return Object.fromEntries(value);
+        } else {
+            return value;
+        }
+    });
+    log.info(`Downloading: ${streamType}Url=${inputUrl} outputFile=${outputFile}`);
+    log.info(`Downloading: options=${optsJson}`)
     downloadProcess = {
         isStop: false,
         abortController: new AbortController(),
