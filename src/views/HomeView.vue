@@ -24,6 +24,7 @@ const isDownloading = ref(false); /* ui binding */
 const downloadSpeed = ref('');
 const downloadProgress = ref(0);
 const percentFormat = (percent:number) => `${Number((percent*100).toFixed(2))}%`;
+let pollingTimer: ReturnType<typeof setInterval>;
 
 const formatSize = (size: number) => {
   if (size < 0) {
@@ -43,7 +44,7 @@ const formatSize = (size: number) => {
 
 const startPollingTimer = (isVideo: boolean) => {
   let streamType = isVideo ? 'video' : 'audio';
-  let pollingTimer = setInterval(async () => {
+  pollingTimer = setInterval(async () => {
     let progress = await window.$electron.m3u8GetDownloadProgress();
     if (progress.isStop) {
       clearInterval(pollingTimer);
@@ -163,6 +164,8 @@ const onGo = async () => {
         audioPartFiles = res;
       }
     }
+    /* do not mess up */
+    clearInterval(pollingTimer);
     /* concat all */
     if (!isCancelDownloading.value && videoPartFiles.length > 0) {
       downloadSpeed.value = 'Running ffmpeg concat...';
