@@ -107,6 +107,8 @@ const createWindow = () => {
         icon: path.join(__dirname, 'icon256x256.png'),
         webPreferences: {
             spellcheck: false,
+            /* fix progress bar not updating in background */
+            backgroundThrottling: false,
             preload: path.join(__dirname, 'preload.mjs')
         }
     });
