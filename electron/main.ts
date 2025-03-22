@@ -31,6 +31,7 @@ ffmpegInit();
 process.on("uncaughtException", (err) => {
     const stack = err.stack ? err.stack : `${err.name}: ${err.message}`;
     const message = 'Uncaught Exception:\n' + stack;
+    log.error('Error in the main process', err)
     dialog.showErrorBox('Error in the main process', message);
     app.exit(-1);
 });
@@ -40,7 +41,8 @@ process.on("unhandledRejection", (err) => {
     if (err instanceof Error) {
         stack = err.stack ? err.stack : `${err.name}: ${err.message}`;
     }
-    const message = 'Uncaught Exception:\n' + stack;
+    const message = 'Unhandled Rejection:\n' + stack;
+    log.error('Error in the main process', err)
     dialog.showErrorBox('Error in the main process', message);
     app.exit(-1);
 });
