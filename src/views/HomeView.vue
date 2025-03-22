@@ -23,6 +23,7 @@ const isCancelDownloading = ref(false); /* status management */
 const isDownloading = ref(false); /* ui binding */
 const downloadSpeed = ref('');
 const downloadProgress = ref(0);
+const percentFormat = (percent:number) => `${Number((percent*100).toFixed(2))}%`;
 
 const formatSize = (size: number) => {
   if (size < 0) {
@@ -55,7 +56,7 @@ const startPollingTimer = (isVideo: boolean) => {
     let percent = (progress.totalSegs == 0) ? 1 : progress.transferredSegs / progress.totalSegs;
     let str = `Downloading ${streamType}: ${progress.transferredSegs}/${progress.totalSegs} segs `
         + `(${formatSize(progress.transferredBytes)}/${formatSize(progress.transferredBytes/percent)} @ ${formatSize(progress.speed)}/s)`;
-    downloadProgress.value = Number((percent*100).toFixed(2));
+    downloadProgress.value = percent;
     downloadSpeed.value = str;
     if (progress.transferredSegs == progress.totalSegs) {
       clearInterval(pollingTimer);
@@ -278,7 +279,7 @@ const onCancel = async () => {
     </el-row>
     <el-row>
       <el-col :span="24">
-        <el-progress :text-inside="true" :stroke-width="20" :percentage="downloadProgress" />
+        <el-progress :text-inside="true" :stroke-width="20" :percentage="downloadProgress" :format="percentFormat" />
       </el-col>
     </el-row>
   </el-scrollbar>
