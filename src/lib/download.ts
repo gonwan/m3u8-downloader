@@ -115,7 +115,7 @@ class DownloadManager {
                     https: this.options.proxy ? new HttpsProxyAgent(this.options.proxy) : undefined
                 },
                 timeout: {
-                    response: this.options.timeout
+                    request: this.options.timeout
                 },
                 retry: {
                     limit: this.options.retries
@@ -142,7 +142,7 @@ class DownloadManager {
                     https: this.options.proxy ? new HttpsProxyAgent(this.options.proxy) : undefined
                 },
                 timeout: {
-                    response: this.options.timeout
+                    request: this.options.timeout
                 },
                 retry: {
                     limit: this.options.retries
