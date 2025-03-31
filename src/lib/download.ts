@@ -30,8 +30,8 @@ type StreamInfo = {
 };
 
 type VideoInfo = {
-    video: StreamInfo[],
-    audio: StreamInfo[]
+    video?: StreamInfo[],
+    audio?: StreamInfo[]
 }
 
 type DownloadProgress = {

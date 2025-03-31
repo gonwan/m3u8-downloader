@@ -115,12 +115,12 @@ const onGo = async () => {
     let videoUrl = '';
     let videoCodecs = '';
     let audioUrl = '';
-    if (!videoInfo) {
-      log.info('Input Url is already a video m3u8');
-      videoUrl = form.m3u8Url;
-    } else if (videoInfo instanceof Error) {
+    if (videoInfo instanceof Error) {
       err = videoInfo;
       break;
+    } else if (!videoInfo.video) {
+      log.info('Input Url is already a video m3u8');
+      videoUrl = form.m3u8Url;
     } else {
       /* input url is playlist.m3u8 */
       if (!downloadOptions.autoSelectBest) {

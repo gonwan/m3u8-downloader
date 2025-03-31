@@ -17,9 +17,9 @@ let downloadProcess: DownloadProgress;
  * @param inputUrl
  * @param outputFile
  * @param downloadOptions
- * @return void if it is not a playlist
+ * @return empty video/audio stream if it is not a playlist
  *         one pair of video/audio stream info if auto select best
- *         all video/audio stream info otherwise
+ *         all pairs of video/audio stream info otherwise
  */
 const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions) => {
     let dot = outputFile.lastIndexOf('.');
@@ -34,6 +34,7 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
     parser.end();
     if (!parser.manifest.playlists) {
         await fs.promises.writeFile(path.join(ofile, 'video.m3u8'), m3u8Buff);
+        return { } as VideoInfo;
     } else {
         //log.verbose('Got playlist:');
         //log.verbose(parser.manifest);
@@ -49,7 +50,7 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
                 audioGroup: pl.attributes?.AUDIO ?? '',
                 subtitlesGroup: pl.attributes?.SUBTITLES ?? ''
             };
-            videoInfo.video.push(videoStream);
+            videoInfo.video!.push(videoStream);
         }
         if (parser.manifest.mediaGroups && parser.manifest.mediaGroups.AUDIO) {
             for (const [group, groupInfo] of Object.entries<any>(parser.manifest.mediaGroups.AUDIO)) {
@@ -60,7 +61,7 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
                         url: langInfo.uri ? url.resolve(inputUrl, langInfo.uri) : '',
                         language: langInfo.language ?? ''
                     };
-                    videoInfo.audio.push(audioStream);
+                    videoInfo.audio!.push(audioStream);
                 }
             }
         }
@@ -94,11 +95,11 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
             let bestVideoInfo: VideoInfo = {video: [], audio: []};
             if (bestVideoStream) {
                 //log.info(`Selecting video resolution ${bestVideoStream.resWidth}x${bestVideoStream.resHeight}: ${bestVideoStream.url}`);
-                bestVideoInfo.video.push(bestVideoStream);
+                bestVideoInfo.video!.push(bestVideoStream);
             }
             if (bestAudioStream) {
                 //log.info(`Selecting audio language ${bestAudioStream.language}: ${bestAudioStream.url}`);
-                bestVideoInfo.audio.push(bestAudioStream);
+                bestVideoInfo.audio!.push(bestAudioStream);
             }
             return bestVideoInfo;
         }
@@ -153,8 +154,13 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
                     keyMethod: seg.key.method
                 });
             } else {
-                partMap.get(part)?.push({idx: i, dlUrl: dlUrl, ptPath: ptPath,
-                    length: seg.byterange?.length, offset: seg.byterange?.offset });
+                partMap.get(part)?.push({
+                    idx: i,
+                    dlUrl: dlUrl,
+                    ptPath: ptPath,
+                    length: seg.byterange?.length,
+                    offset: seg.byterange?.offset
+                });
             }
             if (seg.map && seg.map.uri) { /* EXT-MAP-KEY */
                 if (!hasXMap) {
@@ -208,7 +214,7 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
     let segs: SegInfo[] = [];
     let partMap = await m3u8ParseSegments(inputUrl, ofile, downloadManager, isVideo);
     if (!partMap || partMap.size == 0) {
-        return [];
+        return [] as string[];
     }
     let c = 0;
     for (let [_, v] of partMap) {
@@ -220,7 +226,7 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
     log.info(`Found ${c} ${streamType} segments in ${partMap.size} parts`);
     await downloadManager.downloadSegments(segs, downloadProcess);
     /* now merge parts */
-    let partFiles = [];
+    let partFiles: string[] = [];
     let partFilesMap = new Map<string, number[]>();
     if (!downloadProcess.isStop) {
         let hasXMap = fs.existsSync(path.join(ofile, streamType, 'init.mp4'));
