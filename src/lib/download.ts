@@ -115,7 +115,7 @@ class DownloadManager {
                     https: this.options.proxy ? new HttpsProxyAgent(this.options.proxy) : undefined
                 },
                 timeout: {
-                    request: this.options.timeout
+                    response: this.options.timeout
                 },
                 retry: {
                     limit: this.options.retries
@@ -142,7 +142,7 @@ class DownloadManager {
                     https: this.options.proxy ? new HttpsProxyAgent(this.options.proxy) : undefined
                 },
                 timeout: {
-                    request: this.options.timeout
+                    response: this.options.timeout
                 },
                 retry: {
                     limit: this.options.retries
@@ -179,6 +179,7 @@ class DownloadManager {
         downloadProgress.totalSegs = segs.length;
         let requests = new Map<number, any>();
         let transferredBytes = new Map<number, number>();
+        let failedSegs: number[] = [];
         const statCallback = (idx: number, progress: Progress) => {
             transferredBytes.set(idx, progress.transferred);
         }
@@ -189,40 +190,54 @@ class DownloadManager {
                 current += v;
             })
             downloadProgress.transferredBytes = current;
-            downloadProgress.speed = current - prev;
+            /* transferred bytes restart from 0 when retrying */
+            downloadProgress.speed = (current > prev) ? (current - prev) : 0;
             }, 1000);
         for (let i = 0; i < segs.length; i++) {
             if (downloadProgress.isStop) {
                 break;
             }
-            // @ts-ignore
-            if (requests.size <= this.options.concurrency) {
-                log.info(`Downloading seg${i}: ${segs[i].dlUrl}`);
-                let p = this.downloadOneSegment(segs[i], downloadProgress.abortController.signal, statCallback).then(() => {
-                    requests.delete(segs[i].idx);
+            log.info(`Downloading seg${i}: ${segs[i].dlUrl}`);
+            let p = this.downloadOneSegment(segs[i], downloadProgress.abortController.signal, statCallback)
+                .then(() => {
+                    requests.delete(i);
                     downloadProgress.transferredSegs++;
+                })
+                .catch((err) => {
+                    requests.delete(i);
+                    if (err instanceof AbortError) {
+                        log.error(`Download seg${i} aborted`);
+                    } else {
+                        log.error(`Download seg${i} failed`, err);
+                        failedSegs.push(i);
+                    }
                 });
-                requests.set(segs[i].idx, p);
-                if (requests.size == this.options.concurrency) {
-                    await Promise.any(requests.values())
-                        .catch((err) => {
-                            log.error('Download failed', err);
-                        });
-                }
+            requests.set(i, p);
+            if (requests.size >= this.options.concurrency!) {
+                await Promise.any(requests.values())
+                    .catch((err) => {
+                        /* all promises rejected, err = AggregateError. */
+                        log.error('Download failed', err);
+                    });
             }
         }
-        await Promise.all(requests.values())
-            .catch((err) => {
-                if (err instanceof AbortError) {
-                    log.info("Download aborted");
-                } else {
-                    log.error('Download failed', err);
-                    throw err;
-                }
-            });
+        while (requests.size > 0) {
+            await Promise.any(requests.values())
+                .catch((err) => {
+                    /* all promises rejected, err = AggregateError. */
+                    log.error('Download failed2', err);
+                });
+        }
         /* sleep to get progress updated to 100% */
         await new Promise(r => setTimeout(r, 1000));
         clearInterval(statTimer);
+        /* check failed segs */
+        if (!downloadProgress.isStop && failedSegs.length > 0) {
+            let errMsg = `Download failed: segs=${failedSegs}\n`
+                + 'Try to increase timeout and [Go] again for failed segs!';
+            log.error(errMsg);
+            throw new Error(errMsg);
+        }
     }
 
 }
