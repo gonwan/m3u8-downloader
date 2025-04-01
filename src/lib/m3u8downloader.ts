@@ -57,6 +57,9 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
     let parser = new Parser();
     parser.push(m3u8Buff.toString());
     parser.end();
+    if (!parser.manifest.playlists && parser.manifest.segments.length == 0) {
+        throw new Error('Failed to find playlists or segments in the m3u8 file.');
+    }
     if (!parser.manifest.playlists) {
         await fs.promises.writeFile(path.join(ofile, 'video.m3u8'), m3u8Buff);
         return { } as VideoInfo;
