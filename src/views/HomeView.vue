@@ -109,8 +109,14 @@ const onGo = async () => {
     preserveFiles: form.preserveFiles
   };
   let err;
-  /* check playlist */
   do {
+    /* init ffmpeg */
+    let ffmpegExePath = localStorage.getItem('md.ffmpegExePath');
+    err = await window.$electron.ffmpegInit(ffmpegExePath);
+    if (err instanceof Error) {
+      break;
+    }
+    /* check playlist */
     let videoInfo = await window.$electron.m3u8CheckPlaylist(form.m3u8Url, form.downloadFilePath, downloadOptions);
     let videoUrl = '';
     let videoCodecs = '';

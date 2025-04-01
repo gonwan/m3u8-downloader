@@ -20,7 +20,6 @@ Object.assign(console, log.functions);
  */
 globalThis.__filename = fileURLToPath(import.meta.url);
 globalThis.__dirname = path.dirname(__filename);
-ffmpegInit();
 
 /*
  * https://github.com/electron/electron/blob/c57ce31e84120efc74125fd084931092c9a4d228/lib/browser/init.ts#L21
@@ -96,6 +95,14 @@ const _m3u8ConcatStreams = async (event: Electron.IpcMainInvokeEvent, videoPartF
     }
 }
 
+const _ffmpegInit = async (event: Electron.IpcMainInvokeEvent, ffPath?: string)=> {
+    try {
+        return ffmpegInit(ffPath);
+    } catch (err) {
+        return err as Error;
+    }
+}
+
 const _checkFileExists = async (event: Electron.IpcMainInvokeEvent, filePath: string) => {
     return checkFileExists(filePath);
 }
@@ -155,6 +162,7 @@ app.whenReady().then(() => {
     ipcMain.handle('m3u8StopDownload', _m3u8StopDownload);
     ipcMain.handle('m3u8GetDownloadProgress', _m3u8GetDownloadProgress);
     ipcMain.handle('m3u8ConcatStreams', _m3u8ConcatStreams);
+    ipcMain.handle('ffmpegInit', _ffmpegInit);
     ipcMain.handle('checkFileExists', _checkFileExists);
     ipcMain.handle('openLogFolder', _openLogFolder);
     createWindow();

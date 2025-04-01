@@ -8,6 +8,7 @@ export interface IElectron {
     m3u8StopDownload: () => Promise<void>,
     m3u8GetDownloadProgress: () => Promise<DownloadProgress>,
     m3u8ConcatStreams: (videoPartFiles: string[], audioPartFiles: string[], outputFile: string, workingDir: string, downloadOptions: DownloadOptions, videoCodecs: string) => Promise<void> | Promise<Error>,
+    ffmpegInit: (ffPath?: string) => Promise<void> | Promise<Error>,
     checkFileExists: (filePath: string) => Promise<string>,
     openLogFolder: () => Promise<void>
 }
