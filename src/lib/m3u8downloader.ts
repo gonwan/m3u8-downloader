@@ -50,7 +50,7 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
                 audioGroup: pl.attributes?.AUDIO ?? '',
                 subtitlesGroup: pl.attributes?.SUBTITLES ?? ''
             };
-            videoInfo.video!.push(videoStream);
+            videoInfo.video.push(videoStream);
         }
         if (parser.manifest.mediaGroups && parser.manifest.mediaGroups.AUDIO) {
             for (const [group, groupInfo] of Object.entries<any>(parser.manifest.mediaGroups.AUDIO)) {
@@ -61,7 +61,7 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
                         url: langInfo.uri ? url.resolve(inputUrl, langInfo.uri) : '',
                         language: langInfo.language ?? ''
                     };
-                    videoInfo.audio!.push(audioStream);
+                    videoInfo.audio.push(audioStream);
                 }
             }
         }
@@ -95,11 +95,11 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
             let bestVideoInfo: VideoInfo = {video: [], audio: []};
             if (bestVideoStream) {
                 //log.info(`Selecting video resolution ${bestVideoStream.resWidth}x${bestVideoStream.resHeight}: ${bestVideoStream.url}`);
-                bestVideoInfo.video!.push(bestVideoStream);
+                bestVideoInfo.video.push(bestVideoStream);
             }
             if (bestAudioStream) {
                 //log.info(`Selecting audio language ${bestAudioStream.language}: ${bestAudioStream.url}`);
-                bestVideoInfo.audio!.push(bestAudioStream);
+                bestVideoInfo.audio.push(bestAudioStream);
             }
             return bestVideoInfo;
         }

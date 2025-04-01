@@ -30,8 +30,8 @@ type StreamInfo = {
 };
 
 type VideoInfo = {
-    video?: StreamInfo[],
-    audio?: StreamInfo[]
+    video: StreamInfo[],
+    audio: StreamInfo[]
 }
 
 type DownloadProgress = {
@@ -233,8 +233,7 @@ class DownloadManager {
         clearInterval(statTimer);
         /* check failed segs */
         if (!downloadProgress.isStop && failedSegs.length > 0) {
-            let errMsg = `Download failed: segs=${failedSegs}\n`
-                + 'Try to increase timeout and [Go] again for failed segs!';
+            let errMsg = `Download failed: segs=${failedSegs}`;
             log.error(errMsg);
             throw new Error(errMsg);
         }

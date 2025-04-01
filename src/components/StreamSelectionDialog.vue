@@ -71,6 +71,11 @@ const onOK = () => {
   visible.value = false;
 }
 
+const onCancel = () => {
+  resolve({ } as VideoInfo);
+  visible.value = false;
+}
+
 const formatVideoStreamInfo = (streamInfo: StreamInfo) => {
   let str = '';
   if (streamInfo.resWidth && streamInfo.resHeight) {
@@ -137,6 +142,7 @@ defineExpose({
     </div>
     <div mt-6 mb-4>
       <el-button type="primary" @click="onOK">OK</el-button>
+      <el-button type="primary" @click="onCancel">Cancel</el-button>
     </div>
   </el-dialog>
 </template>
