@@ -12,6 +12,7 @@ type SegInfo = {
     ptPath: string;
     length?: number;
     offset?: number;
+    hasXMap: boolean;
     key?: Buffer;
     keyIV?: Uint32Array;
     keyMethod?: string
@@ -171,7 +172,9 @@ class DownloadManager {
                     break;
             }
         }
-        buff = this.skipToTsHeader(buff, seg.idx);
+        if (!seg.hasXMap) {
+            buff = this.skipToTsHeader(buff, seg.idx);
+        }
         await fs.promises.writeFile(outputPath, buff);
     }
 

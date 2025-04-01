@@ -121,7 +121,7 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
         let part = -1;
         let partMap = new Map<number, SegInfo[]>();
         let keyMap = new Map<string, Buffer>();
-        let hasXMap = false;
+        let gotXMap = false;
         for (let i = 0; i < parser.manifest.segments.length; i++) {
             let seg = parser.manifest.segments[i];
             if (seg.discontinuity || i == 0) {
@@ -133,6 +133,16 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
             let ptPath = path.join(ofile, isVideo ? 'video' : 'audio', `part${part}`);
             if (!fs.existsSync(ptPath)) {
                 await fs.promises.mkdir(ptPath, { recursive: true });
+            }
+            let hasXMap: boolean = seg.map && seg.map.uri;
+            if (hasXMap) { /* EXT-MAP-KEY */
+                if (!gotXMap) {
+                    let xMapUrl = url.resolve(inputUrl, seg.map.uri);
+                    log.info(`Getting map file from: ${xMapUrl}`);
+                    let xMapBuff = await downloadManager.downloadFile(xMapUrl, seg.map.byterange?.length, seg.map.byterange?.offset);
+                    await fs.promises.writeFile(path.join(ofile, isVideo ? 'video' : 'audio', 'init.mp4'), xMapBuff);
+                    gotXMap = true;
+                }
             }
             if (seg.key) { /* EXT-X-KEY */
                 let keyUrl = url.resolve(inputUrl, seg.key.uri);
@@ -149,6 +159,7 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
                     ptPath: ptPath,
                     length: seg.byterange?.length,
                     offset: seg.byterange?.offset,
+                    hasXMap: hasXMap,
                     key: key,
                     keyIV: seg.key.iv ?? DEFAULT_IV,
                     keyMethod: seg.key.method
@@ -159,17 +170,9 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
                     dlUrl: dlUrl,
                     ptPath: ptPath,
                     length: seg.byterange?.length,
-                    offset: seg.byterange?.offset
+                    offset: seg.byterange?.offset,
+                    hasXMap: hasXMap
                 });
-            }
-            if (seg.map && seg.map.uri) { /* EXT-MAP-KEY */
-                if (!hasXMap) {
-                    let xMapUrl = url.resolve(inputUrl, seg.map.uri);
-                    log.info(`Getting map file from: ${xMapUrl}`);
-                    let xMapBuff = await downloadManager.downloadFile(xMapUrl, seg.map.byterange?.length, seg.map.byterange?.offset);
-                    await fs.promises.writeFile(path.join(ofile, isVideo ? 'video' : 'audio', 'init.mp4'), xMapBuff);
-                    hasXMap = true;
-                }
             }
         }
         return partMap;
