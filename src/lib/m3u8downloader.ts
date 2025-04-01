@@ -6,11 +6,36 @@ import log from 'electron-log/main';
 // @ts-ignore
 import { Parser } from 'm3u8-parser';
 import { StreamInfo, VideoInfo, SegInfo, DownloadProgress, DownloadOptions, DownloadManager } from './download';
-import { binaryConcat, ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg";
+import { ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg";
 
 const DEFAULT_IV = new Uint32Array([0, 0, 0, 0]);
 
 let downloadProcess: DownloadProgress;
+
+/**
+ * Concat segments of media files, without ffmpeg
+ * @param files files to concat
+ * @param outputFile output file without extension
+ * @param workingDir working directory
+ */
+const binaryConcat = async (files: string[], outputFile: string, workingDir: string) => {
+    let cwd = process.cwd();
+    process.chdir(workingDir);
+    log.info(`Running binary concat: files=${files} outputFile=${outputFile}.ts`);
+    let ofile;
+    try {
+        ofile = await fs.promises.open(`${outputFile}.ts`, 'w+');
+        for (let f of files) {
+            await ofile.appendFile(await fs.promises.readFile(f));
+        }
+    } catch (err) {
+        log.error('Binary concat failed!');
+        throw err;
+    } finally {
+        await ofile?.close();
+        process.chdir(cwd);
+    }
+}
 
 /**
  * Download and parse playlist.m3u8

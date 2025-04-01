@@ -1,35 +1,8 @@
-import fs from 'node:fs';
-import process from 'node:process';
 import { createRequire } from 'node:module';
 import ffmpeg from 'fluent-ffmpeg';
 import log from 'electron-log/main';
 
 const require = createRequire(import.meta.url);
-
-/**
- * Concat segments of media files, without ffmpeg
- * @param files files to concat
- * @param outputFile output file without extension
- * @param workingDir working directory
- */
-const binaryConcat = async (files: string[], outputFile: string, workingDir: string) => {
-    let cwd = process.cwd();
-    process.chdir(workingDir);
-    log.info(`Running binary concat: files=${files} outputFile=${outputFile}`);
-    let ofile;
-    try {
-        ofile = await fs.promises.open(`${outputFile}.ts`, 'w+');
-        for (let f of files) {
-            await ofile.appendFile(await fs.promises.readFile(f));
-        }
-    } catch (err) {
-        log.error('Binary concat failed!');
-        throw err;
-    } finally {
-        await ofile?.close();
-        process.chdir(cwd);
-    }
-}
 
 const ffmpegInit = () => {
     //ffmpeg.setFfmpegPath('C:\\Users\\gonwan\\Downloads\\N_m3u8DL-CLI_v3.0.2_with_ffmpeg_and_SimpleG\\ffmpeg.exe')
@@ -172,4 +145,4 @@ const ffmpegConvertToMpegTs = async (file: string) => {
     });
 }
 
-export { binaryConcat, ffmpegInit, ffmpegConcat, ffmpegConvertToMpegTs };
+export { ffmpegInit, ffmpegConcat, ffmpegConvertToMpegTs };
