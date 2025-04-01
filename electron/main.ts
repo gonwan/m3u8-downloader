@@ -95,7 +95,7 @@ const _m3u8ConcatStreams = async (event: Electron.IpcMainInvokeEvent, videoPartF
     }
 }
 
-const _ffmpegInit = async (event: Electron.IpcMainInvokeEvent, ffPath?: string)=> {
+const _ffmpegInit = async (event: Electron.IpcMainInvokeEvent, ffPath: string | null)=> {
     try {
         return ffmpegInit(ffPath);
     } catch (err) {

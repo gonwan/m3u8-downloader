@@ -46,6 +46,7 @@ const binaryConcat = async (files: string[], outputFile: string, workingDir: str
  *         all pairs of video/audio stream info otherwise
  */
 const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions) => {
+    log.info(`Checking m3u8 playlist: url=${inputUrl} outputFile=${outputFile}`);
     let dot = outputFile.lastIndexOf('.');
     let ofile = (dot == -1) ? outputFile : outputFile.slice(0, dot);
     if (!fs.existsSync(ofile)) {
@@ -131,8 +132,13 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
 }
 
 const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager: DownloadManager, isVideo: boolean) => {
-    let m3u8Buff = await downloadManager.downloadFile(inputUrl);
-    await fs.promises.writeFile(path.join(ofile, `${isVideo ? 'video' : 'audio'}.m3u8`), m3u8Buff);
+    let m3u8Buff: Buffer;
+    if (isVideo && fs.existsSync(path.join(ofile, 'video.m3u8'))) {
+        m3u8Buff = await fs.promises.readFile(path.join(ofile, 'video.m3u8'));
+    } else {
+        m3u8Buff = await downloadManager.downloadFile(inputUrl);
+        await fs.promises.writeFile(path.join(ofile, `${isVideo ? 'video' : 'audio'}.m3u8`), m3u8Buff);
+    }
     let parser = new Parser();
     parser.push(m3u8Buff.toString());
     parser.end();
@@ -223,15 +229,6 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
     });
     log.info(`Downloading: ${streamType}Url=${inputUrl} outputFile=${outputFile}`);
     log.info(`Downloading: options=${optsJson}`)
-    downloadProcess = {
-        isStop: false,
-        abortController: new AbortController(),
-        totalSegs: -1, /* not filled */
-        transferredSegs: 0,
-        totalBytes: 0,
-        transferredBytes: 0,
-        speed: 0
-    };
     let dot = outputFile.lastIndexOf('.');
     let ofile = (dot == -1) ? outputFile : outputFile.slice(0, dot);
     if (!fs.existsSync(ofile)) {
@@ -252,8 +249,18 @@ const m3u8Download = async (inputUrl: string, outputFile: string, downloadOption
         }
     }
     log.info(`Found ${c} ${streamType} segments in ${partMap.size} parts`);
+    /* download segments */
+    downloadProcess = {
+        isStop: false,
+        abortController: new AbortController(),
+        totalSegs: -1, /* not filled */
+        transferredSegs: 0,
+        totalBytes: 0,
+        transferredBytes: 0,
+        speed: 0
+    };
     await downloadManager.downloadSegments(segs, downloadProcess);
-    /* now merge parts */
+    /* merge segments to parts */
     let partFiles: string[] = [];
     let partFilesMap = new Map<string, number[]>();
     if (!downloadProcess.isStop) {

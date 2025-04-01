@@ -4,7 +4,7 @@ import log from 'electron-log/main';
 
 const require = createRequire(import.meta.url);
 
-const ffmpegInit = (ffPath?: string) => {
+const ffmpegInit = (ffPath: string | null) => {
     try {
         let ffmpegPath: string;
         if (ffPath) {
