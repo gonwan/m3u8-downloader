@@ -13,6 +13,7 @@ Yet another m3u8 downloader built with vue3/vite, element-plus & electron.
 - HLS `AES-128` encryption support
 - Automatic image headers skipping
 - Automatic Ads removing
+- Alternative FFmpeg versions support
 
 #### Dependencies
 - Vite 5+: Node 18+ is required, and CJS Node API is deprecated.
