@@ -47,6 +47,14 @@ process.on("unhandledRejection", (err) => {
     app.exit(-1);
 });
 
+const _showOpenDialog = async (event: Electron.IpcMainInvokeEvent, extension: string)=> {
+    let win = BrowserWindow.fromWebContents(event.sender)!;
+    return dialog.showOpenDialog(win,{
+        filters: [{ name: extension, extensions: [ extension ] }],
+        properties: ['openFile']
+    });
+}
+
 const _showSaveDialog = async (event: Electron.IpcMainInvokeEvent, extension: string)=> {
     let win = BrowserWindow.fromWebContents(event.sender)!;
     return dialog.showSaveDialog(win,{
@@ -140,6 +148,7 @@ app.whenReady().then(() => {
      *   console.error(`Error occurred in handler for '${channel}':`, error);
      * in order to catch this, override console.error() using electron-log.
      */
+    ipcMain.handle('showOpenDialog', _showOpenDialog);
     ipcMain.handle('showSaveDialog', _showSaveDialog);
     ipcMain.handle('m3u8CheckPlaylist', _m3u8CheckPlaylist);
     ipcMain.handle('m3u8Download', _m3u8Download);

@@ -1,6 +1,7 @@
 import { VideoInfo, DownloadOptions, DownloadProgress } from './lib/download';
 
 export interface IElectron {
+    showOpenDialog: (extension: string) => Promise<Electron.OpenDialogReturnValue>,
     showSaveDialog: (extension: string) => Promise<Electron.SaveDialogReturnValue>,
     m3u8CheckPlaylist: (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions) => Promise<Error> | Promise<VideoInfo>,
     m3u8Download: (inputUrl: string, outputFile: string, downloadOptions: DownloadOptions, isVideo: boolean, removeAds: boolean) => Promise<Error> | Promise<string[]>,
