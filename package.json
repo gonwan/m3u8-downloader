@@ -23,6 +23,7 @@
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@types/fluent-ffmpeg": "^2.1.24",
+    "@types/m3u8-parser": "^7.2.0",
     "electron-log": "^5.1.6",
     "element-plus": "^2.7.6",
     "fluent-ffmpeg": "^2.1.3",

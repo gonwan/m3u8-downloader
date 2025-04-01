@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import path from "node:path";
 import url from 'node:url';
 import log from 'electron-log/main';
-// @ts-ignore
 import { Parser } from 'm3u8-parser';
 import { StreamInfo, VideoInfo, SegInfo, DownloadProgress, DownloadOptions, DownloadManager } from './download';
 import { ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg";
@@ -55,7 +54,7 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
     let downloadManager = new DownloadManager(downloadOptions);
     let m3u8Buff = await downloadManager.downloadFile(inputUrl);
     let parser = new Parser();
-    parser.push(m3u8Buff);
+    parser.push(m3u8Buff.toString());
     parser.end();
     if (!parser.manifest.playlists) {
         await fs.promises.writeFile(path.join(ofile, 'video.m3u8'), m3u8Buff);
@@ -67,13 +66,13 @@ const m3u8CheckPlaylist = async (inputUrl: string, outputFile: string, downloadO
         let videoInfo: VideoInfo = {video: [], audio: []};
         for (let pl of parser.manifest.playlists) {
             let videoStream: StreamInfo = {
-                resWidth: pl.attributes?.RESOLUTION?.width ?? 0,
-                resHeight: pl.attributes?.RESOLUTION?.height ?? 0,
-                bandwidth: pl.attributes?.BANDWIDTH ?? 0,
-                url: pl.uri ? url.resolve(inputUrl, pl.uri) : '',
-                codecs: pl.attributes?.CODECS ?? '',
-                audioGroup: pl.attributes?.AUDIO ?? '',
-                subtitlesGroup: pl.attributes?.SUBTITLES ?? ''
+                resWidth: (pl.attributes?.RESOLUTION as any)?.width ?? 0,
+                resHeight: (pl.attributes?.RESOLUTION as any)?.height ?? 0,
+                bandwidth: pl.attributes?.BANDWIDTH as number ?? 0,
+                url: (pl as any).uri ? url.resolve(inputUrl, (pl as any).uri) : '',
+                codecs: pl.attributes?.CODECS as string ?? '',
+                audioGroup: pl.attributes?.AUDIO as string ?? '',
+                subtitlesGroup: pl.attributes?.SUBTITLES as string ?? ''
             };
             videoInfo.video.push(videoStream);
         }
@@ -135,7 +134,7 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
     let m3u8Buff = await downloadManager.downloadFile(inputUrl);
     await fs.promises.writeFile(path.join(ofile, `${isVideo ? 'video' : 'audio'}.m3u8`), m3u8Buff);
     let parser = new Parser();
-    parser.push(m3u8Buff);
+    parser.push(m3u8Buff.toString());
     parser.end();
     //log.verbose(isVideo ? 'Got video:' : 'Got audio:');
     //log.verbose(parser.manifest);
@@ -159,8 +158,9 @@ const m3u8ParseSegments = async(inputUrl: string, ofile: string, downloadManager
             if (!fs.existsSync(ptPath)) {
                 await fs.promises.mkdir(ptPath, { recursive: true });
             }
-            let hasXMap: boolean = seg.map && seg.map.uri;
-            if (hasXMap) { /* EXT-MAP-KEY */
+            let hasXMap = false;
+            if (seg.map && seg.map.uri) { /* EXT-MAP-KEY */
+                hasXMap = true;
                 if (!gotXMap) {
                     let xMapUrl = url.resolve(inputUrl, seg.map.uri);
                     log.info(`Getting map file from: ${xMapUrl}`);

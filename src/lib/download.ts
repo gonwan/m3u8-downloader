@@ -14,7 +14,7 @@ type SegInfo = {
     offset?: number;
     hasXMap: boolean;
     key?: Buffer;
-    keyIV?: Uint32Array;
+    keyIV?: string | Uint32Array;
     keyMethod?: string
 };
 
