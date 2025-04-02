@@ -3,10 +3,10 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import log from 'electron-log/main';
-import { ffmpegInit } from '../src/lib/ffmpeg';
-import { m3u8CheckPlaylist, m3u8Download, m3u8GetDownloadProgress, m3u8StopDownload, m3u8ConcatStreams } from '../src/lib/m3u8downloader';
-import { DownloadOptions } from '../src/lib/download';
-import { checkFileExists, openLogFolder } from '../src/lib/utils'
+import { DownloadOptions } from './lib/global';
+import { ffmpegInit } from './lib/ffmpeg';
+import { m3u8CheckPlaylist, m3u8Download, m3u8GetDownloadProgress, m3u8StopDownload, m3u8ConcatStreams } from './lib/m3u8downloader';
+import { checkFileExists, openLogFolder } from './lib/utils'
 
 log.transports.console.level = 'verbose';
 log.transports.file.level = 'verbose';

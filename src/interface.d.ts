@@ -1,4 +1,4 @@
-import { VideoInfo, DownloadOptions, DownloadProgress } from './lib/download';
+import { type VideoInfo, type DownloadOptions, type DownloadProgress } from '../electron/lib/global';
 
 export interface IElectron {
     showOpenDialog: (extension: string) => Promise<Electron.OpenDialogReturnValue>,

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { DownloadOptions } from '../src/lib/download';
+import { DownloadOptions } from './lib/global';
 
 contextBridge.exposeInMainWorld('$electron', {
     showOpenDialog: (extension: string) => ipcRenderer.invoke('showOpenDialog', extension),

@@ -5,57 +5,7 @@ import got, { AbortError, Progress } from 'got';
 import log from 'electron-log/main';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-
-type SegInfo = {
-    idx: number;
-    dlUrl: string;
-    ptPath: string;
-    length?: number;
-    offset?: number;
-    hasXMap: boolean;
-    key?: Buffer;
-    keyIV?: string | Uint32Array;
-    keyMethod?: string
-};
-
-type StreamInfo = {
-    resWidth?: number;
-    resHeight?: number;
-    bandwidth?: number;
-    url: string;
-    codecs?: string,
-    audioGroup?: string, /* video */
-    subtitlesGroup?: string /* video */
-    name?: string, /* audio/subtitle */
-    language?: string /* audio/subtitle */
-};
-
-type VideoInfo = {
-    video: StreamInfo[],
-    audio: StreamInfo[]
-}
-
-type DownloadProgress = {
-    isStop: boolean;
-    abortController: AbortController;
-    totalSegs: number;
-    transferredSegs: number;
-    totalBytes: number;
-    transferredBytes: number;
-    speed: number /* per second */
-};
-
-type DownloadOptions = {
-    /* electron ipc only supports map */
-    headers?: Map<string, string | string[]>;
-    proxy?: string;
-    autoSelectBest: boolean;
-    concurrency?: number;
-    timeout?: number;
-    retries?: number;
-    /* for debugging */
-    preserveFiles?: boolean
-};
+import { DownloadOptions, DownloadProgress, SegInfo } from "./global";
 
 type StatCallback = (idx: number, progress: Progress) => void;
 
@@ -244,4 +194,4 @@ class DownloadManager {
 
 }
 
-export { StreamInfo, VideoInfo, SegInfo, DownloadProgress, DownloadOptions, DownloadManager };
+export { DownloadManager };

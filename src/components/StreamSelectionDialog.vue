@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { StreamInfo, VideoInfo } from '../lib/download';
+import { type StreamInfo, type VideoInfo } from '../../electron/lib/global';
 
 // const props = defineProps<{
 //   videoInfo?: VideoInfo,

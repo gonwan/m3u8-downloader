@@ -6,12 +6,12 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
-// https://vitejs.dev/config/
+// https://vite.dev/config/
 export default defineConfig({
   /* applies to only *.js, *.ts and *.vue file in render process */
   build: {
     sourcemap: true,
-    minify: true,
+    minify: true
   },
   plugins: [
     vue(),
@@ -34,7 +34,7 @@ export default defineConfig({
              * Also see: https://blog.jetbrains.com/webstorm/2016/05/getting-started-with-electron-in-webstorm/
              */
             sourcemap: true,
-            minify: true,
+            minify: true
             // lib: {
             //   entry: 'electron/main.ts',
             //   formats: ['cjs'],
@@ -48,7 +48,7 @@ export default defineConfig({
         vite: {
           build: {
             sourcemap: true,
-            minify: true,
+            minify: true
           }
         }
       }

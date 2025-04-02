@@ -1,4 +1,4 @@
-import {createMemoryHistory, createRouter} from 'vue-router';
+import { createMemoryHistory, createRouter } from 'vue-router';
 import HomeView from './views/HomeView.vue';
 import BilibiliView from './views/BilibiliView.vue';
 import SettingsView from './views/SettingsView.vue';

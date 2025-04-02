@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import log from 'electron-log/renderer';
-import { DownloadOptions } from '../lib/download';
+import { type DownloadOptions } from '../../electron/lib/global';
 import StreamSelectionDialog from '../components/StreamSelectionDialog.vue';
 
 const form = reactive({
