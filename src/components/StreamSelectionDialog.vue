@@ -12,8 +12,8 @@ const selectedVideoIndex = ref(-1);
 const selectedAudioIndex = ref(-1);
 
 let videoInfo: VideoInfo;
-let resolve;
-let reject;
+let resolve: (x: any) => void;
+let reject: (x: any) => void;
 
 const autoSelectBestVideo = () => {
   if (videoInfo.video) {

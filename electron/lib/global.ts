@@ -49,4 +49,4 @@ type DownloadOptions = {
     preserveFiles?: boolean
 };
 
-export { type StreamInfo, type VideoInfo, type SegInfo, type DownloadProgress, type DownloadOptions };
+export { type SegInfo, type StreamInfo, type VideoInfo, type DownloadProgress, type DownloadOptions };

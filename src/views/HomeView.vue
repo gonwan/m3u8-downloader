@@ -112,8 +112,9 @@ const onGo = async () => {
   do {
     /* init ffmpeg */
     let ffmpegExePath = localStorage.getItem('md.ffmpegExePath');
-    err = await window.$electron.ffmpegInit(ffmpegExePath);
-    if (err instanceof Error) {
+    let r = await window.$electron.ffmpegInit(ffmpegExePath);
+    if (r instanceof Error) {
+      err = r;
       break;
     }
     /* check playlist */

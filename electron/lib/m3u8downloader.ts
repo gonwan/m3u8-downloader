@@ -4,7 +4,7 @@ import path from "node:path";
 import url from 'node:url';
 import log from 'electron-log/main';
 import { Parser } from 'm3u8-parser';
-import { StreamInfo, VideoInfo, SegInfo, DownloadProgress, DownloadOptions } from './global';
+import { SegInfo, StreamInfo, VideoInfo, DownloadProgress, DownloadOptions } from './global';
 import { DownloadManager } from './download';
 import { ffmpegConcat, ffmpegConvertToMpegTs } from "./ffmpeg";
 
