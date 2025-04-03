@@ -82,8 +82,14 @@ const onGo = async () => {
     return;
   }
   localStorage.setItem('md.downloadFilePath', form.downloadFilePath);
-  let downloadFilePath = await window.$electron.checkFileExists(form.downloadFilePath);
-  if (downloadFilePath !== form.downloadFilePath) {
+  /*
+   * Use unbind value, or ffmpeg crashes after changing the file path.
+   * https://github.com/fluent-ffmpeg/node-fluent-ffmpeg/issues/861
+   * https://github.com/fluent-ffmpeg/node-fluent-ffmpeg/issues/1316
+   */
+  let formDownloadFilePath = form.downloadFilePath;
+  let downloadFilePath = await window.$electron.checkFileExists(formDownloadFilePath);
+  if (downloadFilePath !== formDownloadFilePath) {
     ElMessage({
       type: 'warning',
       dangerouslyUseHTMLString: true,
@@ -118,7 +124,7 @@ const onGo = async () => {
       break;
     }
     /* check playlist */
-    let videoInfo = await window.$electron.m3u8CheckPlaylist(form.m3u8Url, form.downloadFilePath, downloadOptions);
+    let videoInfo = await window.$electron.m3u8CheckPlaylist(form.m3u8Url, formDownloadFilePath, downloadOptions);
     let videoUrl = '';
     let videoCodecs = '';
     let audioUrl = '';
@@ -152,7 +158,7 @@ const onGo = async () => {
     let videoPartFiles: string[] = [];
     let audioPartFiles: string[] = [];
     if (videoUrl !== '') {
-      let prom = window.$electron.m3u8Download(videoUrl, form.downloadFilePath, downloadOptions, true, (audioUrl === ''));
+      let prom = window.$electron.m3u8Download(videoUrl, formDownloadFilePath, downloadOptions, true, (audioUrl === ''));
       startPollingTimer(true);
       let res = await prom;
       if (res instanceof Error) {
@@ -164,7 +170,7 @@ const onGo = async () => {
     }
     /* download audio */
     if (!isCancelDownloading.value && audioUrl !== '') {
-      let prom = window.$electron.m3u8Download(audioUrl, form.downloadFilePath, downloadOptions, false, false);
+      let prom = window.$electron.m3u8Download(audioUrl, formDownloadFilePath, downloadOptions, false, false);
       startPollingTimer(false);
       let res = await prom;
       if (res instanceof Error) {
@@ -179,8 +185,8 @@ const onGo = async () => {
     /* concat all */
     if (!isCancelDownloading.value && videoPartFiles.length > 0) {
       downloadSpeed.value = 'Running ffmpeg concat...';
-      let dot = form.downloadFilePath.lastIndexOf('.');
-      let workingDir = (dot == -1) ? form.downloadFilePath : form.downloadFilePath.slice(0, dot);
+      let dot = formDownloadFilePath.lastIndexOf('.');
+      let workingDir = (dot == -1) ? formDownloadFilePath : formDownloadFilePath.slice(0, dot);
       let res = await window.$electron.m3u8ConcatStreams(
           videoPartFiles, audioPartFiles ?? [], downloadFilePath, workingDir, downloadOptions, videoCodecs);
       if (res instanceof Error) {

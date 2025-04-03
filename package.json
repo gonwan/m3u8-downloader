@@ -4,7 +4,7 @@
   "author": "gonwan <gonwan@gmail.com>",
   "license": "Apache-2.0",
   "homepage": "https://github.com/gonwan/m3u8-downloader",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "type": "module",
   "private": true,
   "main": "dist-electron/main.js",
