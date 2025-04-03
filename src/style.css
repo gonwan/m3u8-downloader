@@ -75,3 +75,8 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* fix text not wrapping */
+.el-message-box__message {
+  width: 100%
+}

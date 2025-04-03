@@ -186,6 +186,7 @@ class DownloadManager {
         clearInterval(statTimer);
         /* check failed segs */
         if (!downloadProgress.isStop && failedSegs.length > 0) {
+            failedSegs.sort((a, b) => a - b);
             let errMsg = `Download failed: segs=${failedSegs}`;
             log.error(errMsg);
             throw new Error(errMsg);
