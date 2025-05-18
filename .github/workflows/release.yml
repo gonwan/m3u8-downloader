@@ -65,7 +65,7 @@ jobs:
             release/m3u8downloader-v${{ env.APP_VERSION }}-darwin-x64.dmg
 
   build-linux-x64:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
